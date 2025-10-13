@@ -78,6 +78,7 @@ def expand_terms_for_series(
     include_ep_patterns: bool = False,
     ep_patterns: Optional[Iterable[str]] = None,
     max_aliases: Optional[int] = None,
+    min_alias_length: int = 0,
 ) -> List[str]:
     """Return a deduplicated set of search keywords for a series."""
 
@@ -87,6 +88,9 @@ def expand_terms_for_series(
     for alias in aliases:
         a_norm = normalize_text(alias)
         if not a_norm:
+            continue
+        # Skip aliases shorter than minimum length
+        if min_alias_length > 0 and len(a_norm) < min_alias_length:
             continue
         key = a_norm.casefold()
         if key in seen_aliases:
@@ -121,8 +125,9 @@ def build_series_keywords(
     *,
     include_ep_patterns: bool = False,
     max_aliases: Optional[int] = None,
-) -> Dict[str, List[str]]:
-    """Build map of series_id -> prioritized search terms."""
+    min_alias_length: int = 0,
+) -> Tuple[Dict[str, List[str]], Dict[str, List[str]]]:
+    """Return (search_terms_by_series, alias_terms_by_series)."""
 
     canonical_lookup = _canonical_map(data)
 
@@ -135,6 +140,7 @@ def build_series_keywords(
         aliases_by_sid.setdefault(sid, []).append(al)
 
     keywords: Dict[str, List[str]] = {}
+    alias_map: Dict[str, List[str]] = {}
     for sid, alias_entries in aliases_by_sid.items():
         canonical_norm = canonical_lookup.get(sid, "")
         scored: List[Tuple[float, int, str]] = []
@@ -152,6 +158,7 @@ def build_series_keywords(
         scored.sort(key=lambda x: (-x[0], x[1]))
         ordered_names = [name for _, _, name in scored]
 
+        canonical_compact = canonical_norm.replace(" ", "") if canonical_norm else ""
         filtered: List[str] = []
         for name in ordered_names:
             norm = normalize_text(name)
@@ -160,17 +167,40 @@ def build_series_keywords(
                 filtered.append(name)
                 continue
             # Drop ultra-generic aliases (single token, very short) to avoid noise
-            if len(tokens) == 1 and len(norm.replace(" ", "")) <= 6:
+            norm_compact = norm.replace(" ", "")
+            if norm.isascii() and len(tokens) == 1 and len(norm_compact) <= 6:
+                continue
+            if (
+                canonical_norm
+                and norm.isascii()
+                and norm.casefold() in canonical_norm
+                and canonical_compact
+                and len(norm_compact) < max(10, len(canonical_compact) // 2)
+                and len(tokens) <= 3
+            ):
                 continue
             filtered.append(name)
 
         if not filtered:
             filtered = ordered_names[:1]
 
-        keywords[sid] = expand_terms_for_series(
+        alias_terms = expand_terms_for_series(
             filtered,
-            include_ep_patterns=include_ep_patterns,
+            include_ep_patterns=False,
             max_aliases=max_aliases,
+            min_alias_length=min_alias_length,
         )
+        if include_ep_patterns:
+            search_terms = expand_terms_for_series(
+                filtered,
+                include_ep_patterns=True,
+                max_aliases=max_aliases,
+                min_alias_length=min_alias_length,
+            )
+        else:
+            search_terms = alias_terms
 
-    return keywords
+        alias_map[sid] = alias_terms
+        keywords[sid] = search_terms
+
+    return keywords, alias_map
