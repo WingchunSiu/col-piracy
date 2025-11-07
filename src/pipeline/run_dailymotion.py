@@ -4,11 +4,12 @@ import csv
 import datetime as dt
 import json
 import os
+import time
 from typing import Dict, List, Optional, Set
 
 from src.keywords.expand import build_series_keywords
 from src.matching.score import compute_score
-from src.platforms.dailymotion import search_videos
+from src.platforms.dailymotion import search_videos, get_video_status, parse_geoblocking
 
 
 def load_data(path: str) -> Dict:
@@ -112,7 +113,7 @@ def main():
                 sid: title for sid, title in titles_by_sid.items() if sid in keywords_by_sid
             }
 
-    per_term_limit = _int_env('DAILYMOTION_PER_TERM_LIMIT', 12)
+    per_term_limit = _int_env('DAILYMOTION_PER_TERM_LIMIT', 100)
     primary_aliases = _int_env('DAILYMOTION_PRIMARY_ALIASES', 2, minimum=0)
     primary_per_term_limit = _int_env(
         'DAILYMOTION_PRIMARY_PER_TERM_LIMIT', max(per_term_limit, 1), minimum=1
@@ -120,7 +121,13 @@ def main():
     sleep_sec = _float_env('DAILYMOTION_SLEEP_SEC', 0.3)
     score_scale = _float_env('DAILYMOTION_SCORE_SCALE', 6.0, minimum=0.1)
     min_duration_sec = _int_env('DAILYMOTION_MIN_DURATION_SEC', 300, minimum=0)
-    min_score = _float_env('DAILYMOTION_MIN_SCORE', 3.0, minimum=0.0)
+    min_score = _float_env('DAILYMOTION_MIN_SCORE', 5.0, minimum=0.0)
+
+    # Geo-blocking detection config (enabled by default)
+    enable_geo_check = _bool_env('DAILYMOTION_ENABLE_GEO_CHECK', True)
+    check_regions_raw = os.environ.get('DAILYMOTION_CHECK_REGIONS', 'US,CN')
+    check_regions = [r.strip() for r in check_regions_raw.split(',') if r.strip()] if enable_geo_check else []
+    geo_sleep_sec = _float_env('DAILYMOTION_GEO_SLEEP_SEC', 0.1)
 
     # Query Dailymotion
     all_hits: List[Dict] = []
@@ -180,11 +187,41 @@ def main():
         with open(state_path, 'r', encoding='utf-8') as f:
             prev_state = json.load(f)
 
+    # Geo-blocking check (efficient: uses geoblocking field from API)
+    if check_regions:
+        print(f'Checking geo-blocking info for new videos')
+        checked_count = 0
+        for key, h in dedup.items():
+            vid = h.get('id')
+            if not vid:
+                continue
+
+            # Only check geo for new videos (not already in state)
+            if key not in prev_state:
+                try:
+                    status_data = get_video_status(vid)
+                    geoblocking = status_data.get('geoblocking', [])
+                    blocked_regions, available_regions = parse_geoblocking(geoblocking)
+
+                    h['__geoblocking'] = geoblocking
+                    h['__blocked_regions'] = blocked_regions
+                    h['__available_regions'] = available_regions
+                    checked_count += 1
+
+                    time.sleep(geo_sleep_sec)
+                except Exception as e:
+                    print(f'  Warning: Failed to check geo for video {vid}: {e}')
+                    h['__geoblocking'] = []
+                    h['__blocked_regions'] = []
+                    h['__available_regions'] = []
+
+        if checked_count > 0:
+            print(f'  Geo-checked {checked_count} new videos')
+
     today = dt.date.today()
     today_s = today.isoformat()
-    removal_days = _int_env('DAILYMOTION_LIKELY_REMOVED_DAYS', 3, minimum=1)
 
-    # Score and compute status
+    # Score and filter candidates
     new_state: Dict[str, Dict] = {}
     rows: List[List[str]] = []
     for key, h in dedup.items():
@@ -208,10 +245,8 @@ def main():
             continue
 
         prev = prev_state.get(key)
+        is_new = prev is None
         first_seen = prev.get('first_seen') if prev else today_s
-        last_seen = today_s
-        status = 'new' if not prev else 'active'
-        # Determine likely_removed for entries not re-seen will be handled next run
 
         new_state[key] = {
             'platform': 'dailymotion',
@@ -226,95 +261,72 @@ def main():
             'score': round(score, 3),
             'series_id': sid,
             'first_seen': first_seen,
-            'last_seen': last_seen,
             'source_term': h.get('__source_term'),
-            'status': status,
+            'is_new': is_new,
+            'geoblocking': h.get('__geoblocking', []) if is_new else prev.get('geoblocking', []),
+            'blocked_regions': h.get('__blocked_regions', []) if is_new else prev.get('blocked_regions', []),
         }
+        # Geo status summary
+        if is_new and check_regions:
+            blocked_regions = h.get('__blocked_regions', [])
+        else:
+            # For existing videos, use previous geo data
+            blocked_regions = prev.get('blocked_regions', []) if prev else []
+
+        # Determine geo_status
+        if not check_regions:
+            geo_status = 'N/A'
+        elif blocked_regions:
+            geo_status = f"{','.join(blocked_regions)}屏蔽"
+        else:
+            geo_status = '全球可见'
+
         rows.append([
             'dailymotion', h.get('id', ''), title, h.get('url', ''), uploader,
-            str(h.get('created_time', '')), str(h.get('duration', '')), str(h.get('views_total', '')),
-            f"{raw_score:.3f}", f"{score:.3f}", status
+            str(h.get('duration', '')),
+            f"{score:.1f}",
+            'new' if is_new else 'existing',
+            geo_status
         ])
 
-    # Carry over previously seen videos that did not appear today
+    # Carry over previously seen videos that weren't re-detected today
+    # They stay in state but won't appear in today's CSV (recheck will handle them)
     seen_keys = set(new_state.keys())
     for key, prev in prev_state.items():
-        if key in seen_keys:
-            continue
-        last_seen = prev.get('last_seen')
-        days_since = None
-        if last_seen:
-            try:
-                last_seen_dt = dt.date.fromisoformat(str(last_seen))
-                days_since = (today - last_seen_dt).days
-            except ValueError:
-                days_since = None
-
-        if days_since is not None and days_since >= removal_days:
-            status = 'likely_removed'
-        else:
-            status = 'missing'
-
-        prev_entry = prev.copy()
-        prev_entry['status'] = status
-        raw_prev = prev_entry.get('raw_score')
-        if raw_prev is None:
-            # Backward compatibility: previous state stored only `score`
-            raw_prev = prev_entry.get('score', 0.0)
-        try:
-            raw_prev = float(raw_prev)
-        except (TypeError, ValueError):
-            raw_prev = 0.0
-        prev_entry['raw_score'] = round(raw_prev, 3)
-        prev_entry['score'] = round(_normalize_score(raw_prev, score_scale), 3)
-        # Do not update last_seen/first_seen for missing entries
-        new_state[key] = prev_entry
-
-        score_val = prev_entry.get('raw_score', 0)
-        try:
-            raw_score_str = f"{float(score_val):.3f}"
-        except (TypeError, ValueError):
-            raw_score_str = str(score_val) if score_val is not None else '0.000'
-        score_norm_str = f"{prev_entry.get('score', 0):.3f}"
-
-        rows.append([
-            prev_entry.get('platform', 'dailymotion'),
-            prev_entry.get('video_id', ''),
-            prev_entry.get('title', ''),
-            prev_entry.get('url', ''),
-            prev_entry.get('uploader', ''),
-            str(prev_entry.get('publish_time', '')),
-            str(prev_entry.get('duration_sec', '')),
-            str(prev_entry.get('views', '')),
-            raw_score_str,
-            score_norm_str,
-            status,
-        ])
+        if key not in seen_keys:
+            new_state[key] = prev
 
     # Write state
     with open(state_path, 'w', encoding='utf-8') as f:
         json.dump(new_state, f, ensure_ascii=False, indent=2)
 
-    # Write report CSV
+    # Write full report CSV (all videos found today)
     out_csv = os.path.join(out_dir, f'dailymotion_candidates_{today_s}.csv')
     with open(out_csv, 'w', encoding='utf-8', newline='') as f:
         w = csv.writer(f)
-        w.writerow(['platform', 'video_id', 'title', 'url', 'uploader', 'publish_time', 'duration_sec', 'views', 'raw_score', 'score', 'status'])
-        # Sort: score desc, publish_time desc (string), views desc
+        w.writerow(['platform', 'video_id', 'title', 'url', 'uploader', 'duration_sec', 'score', 'status', 'geo_status'])
+        # Sort: score desc
         def sort_key(r):
             try:
-                views = int(r[7]) if r[7].isdigit() else 0
-            except Exception:
-                views = 0
-            try:
-                score_val = float(r[9])
+                score_val = float(r[6])
             except Exception:
                 score_val = 0.0
-            return (-score_val, r[5], -views)
+            return -score_val
         for r in sorted(rows, key=sort_key):
             w.writerow(r)
 
     print(f'Wrote {out_csv} with {len(rows)} rows')
+
+    # Write new detections report (only new videos for operations team)
+    new_rows = [r for r in rows if r[7] == 'new']  # status column (now index 7)
+    if new_rows:
+        new_csv = os.path.join(out_dir, f'new_detections_{today_s}.csv')
+        with open(new_csv, 'w', encoding='utf-8', newline='') as f:
+            w = csv.writer(f)
+            w.writerow(['platform', 'video_id', 'title', 'url', 'uploader', 'duration_sec', 'score', 'status', 'geo_status'])
+            for r in sorted(new_rows, key=sort_key):
+                w.writerow(r)
+        print(f'Wrote {new_csv} with {len(new_rows)} new detections (for operations team)')
 
 
 if __name__ == '__main__':
