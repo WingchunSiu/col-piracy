@@ -147,27 +147,75 @@ def get_video_status(video_id: str) -> Dict:
 
 
 def search_videos(terms: Iterable[str], per_term_limit: int = 10, sleep_sec: float = 0.5) -> List[Dict]:
+    """
+    Search for videos on Dailymotion.
+
+    Args:
+        terms: Search terms to query
+        per_term_limit: Total number of results to fetch per term (will use pagination if > 100)
+        sleep_sec: Sleep time between API calls
+
+    Returns:
+        List of video dictionaries
+
+    Note:
+        Dailymotion API limit is 100 per page. If per_term_limit > 100,
+        will automatically fetch multiple pages.
+    """
     fields = [
         'id', 'title', 'url', 'owner.username', 'owner.id', 'duration', 'created_time', 'views_total'
     ]
     results: List[Dict] = []
+
     for term in terms:
-        q = urllib.parse.urlencode({
-            'search': term,
-            'fields': ','.join(fields),
-            'limit': per_term_limit,
-            'sort': 'relevance',
-        })
-        url = f"{DAILYMOTION_API}?{q}"
-        try:
-            data = _http_get(url)
-        except Exception as e:
-            # Surface but continue
-            print(f"Dailymotion query failed for term='{term}': {e}")
-            continue
-        for item in data.get('list', []) or []:
-            item['__source_term'] = term
-            results.append(item)
-        time.sleep(sleep_sec)
+        # Calculate how many pages we need (max 100 per page)
+        page_size = min(per_term_limit, 100)
+        total_needed = per_term_limit
+        total_fetched = 0
+        page = 1
+
+        while total_fetched < total_needed:
+            # Build query for this page
+            q = urllib.parse.urlencode({
+                'search': term,
+                'fields': ','.join(fields),
+                'limit': page_size,
+                'page': page,
+                'sort': 'relevance',
+            })
+            url = f"{DAILYMOTION_API}?{q}"
+
+            try:
+                data = _http_get(url)
+            except Exception as e:
+                # Surface but continue
+                print(f"Dailymotion query failed for term='{term}' page={page}: {e}")
+                break
+
+            items = data.get('list', []) or []
+            if not items:
+                # No more results
+                break
+
+            for item in items:
+                item['__source_term'] = term
+                results.append(item)
+                total_fetched += 1
+
+                if total_fetched >= total_needed:
+                    break
+
+            # Check if there are more pages
+            has_more = data.get('has_more', False)
+            if not has_more or total_fetched >= total_needed:
+                break
+
+            page += 1
+            time.sleep(sleep_sec)
+
+        # Sleep between terms (already slept between pages)
+        if total_fetched > 0:
+            time.sleep(sleep_sec)
+
     return results
 

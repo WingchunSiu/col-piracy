@@ -113,7 +113,7 @@ def main():
                 sid: title for sid, title in titles_by_sid.items() if sid in keywords_by_sid
             }
 
-    per_term_limit = _int_env('DAILYMOTION_PER_TERM_LIMIT', 100)
+    per_term_limit = _int_env('DAILYMOTION_PER_TERM_LIMIT', 200)
     primary_aliases = _int_env('DAILYMOTION_PRIMARY_ALIASES', 2, minimum=0)
     primary_per_term_limit = _int_env(
         'DAILYMOTION_PRIMARY_PER_TERM_LIMIT', max(per_term_limit, 1), minimum=1
@@ -123,8 +123,8 @@ def main():
     min_duration_sec = _int_env('DAILYMOTION_MIN_DURATION_SEC', 300, minimum=0)
     min_score = _float_env('DAILYMOTION_MIN_SCORE', 5.0, minimum=0.0)
 
-    # Geo-blocking detection config (enabled by default)
-    enable_geo_check = _bool_env('DAILYMOTION_ENABLE_GEO_CHECK', True)
+    # Geo-blocking detection config (disabled by default for speed - use recheck_videos.py instead)
+    enable_geo_check = _bool_env('DAILYMOTION_ENABLE_GEO_CHECK', False)
     check_regions_raw = os.environ.get('DAILYMOTION_CHECK_REGIONS', 'US,CN')
     check_regions = [r.strip() for r in check_regions_raw.split(',') if r.strip()] if enable_geo_check else []
     geo_sleep_sec = _float_env('DAILYMOTION_GEO_SLEEP_SEC', 0.1)
