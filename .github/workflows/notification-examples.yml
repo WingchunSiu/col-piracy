@@ -1,0 +1,106 @@
+# 通知方案示例 - 选择一个适合你的方式
+
+# ============================================
+# 方案1: Email通知 (使用 dawidd6/action-send-mail)
+# ============================================
+email-notification:
+  steps:
+    - name: Send Email with Reports
+      uses: dawidd6/action-send-mail@v3
+      with:
+        server_address: smtp.gmail.com
+        server_port: 587
+        username: ${{ secrets.EMAIL_USERNAME }}
+        password: ${{ secrets.EMAIL_PASSWORD }}
+        subject: "每日盗版检测报告 - ${{ github.run_number }}"
+        to: team@example.com
+        from: piracy-bot@example.com
+        body: |
+          每日盗版检测已完成
+
+          检测时间: ${{ github.run_number }}
+          新检测视频数: [查看附件]
+
+          请下载附件查看详细报告。
+        attachments: reports/new_detections_*.csv
+
+# ============================================
+# 方案2: Slack通知
+# ============================================
+slack-notification:
+  steps:
+    - name: Upload CSV to Slack
+      env:
+        SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
+        SLACK_CHANNEL_ID: ${{ secrets.SLACK_CHANNEL_ID }}
+      run: |
+        # 上传CSV文件
+        curl -F file=@reports/new_detections_*.csv \
+             -F channels=$SLACK_CHANNEL_ID \
+             -F title="每日盗版检测报告" \
+             -F initial_comment="检测完成！发现 $(wc -l < reports/new_detections_*.csv) 个新盗版视频" \
+             -H "Authorization: Bearer $SLACK_BOT_TOKEN" \
+             https://slack.com/api/files.upload
+
+# ============================================
+# 方案3: 钉钉通知
+# ============================================
+dingtalk-notification:
+  steps:
+    - name: Send DingTalk Notification
+      env:
+        DINGTALK_WEBHOOK: ${{ secrets.DINGTALK_WEBHOOK }}
+      run: |
+        NEW_COUNT=$(wc -l < reports/new_detections_*.csv)
+        curl -X POST "$DINGTALK_WEBHOOK" \
+          -H 'Content-Type: application/json' \
+          -d "{
+            \"msgtype\": \"markdown\",
+            \"markdown\": {
+              \"title\": \"每日盗版检测报告\",
+              \"text\": \"### 每日盗版检测报告\n\n- **新检测视频数**: ${NEW_COUNT}\n- **检测时间**: $(date)\n- **下载报告**: [点击这里](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})\n\n请查看附件了解详情。\"
+            }
+          }"
+
+# ============================================
+# 方案4: 上传到S3/OSS并发送链接
+# ============================================
+s3-upload:
+  steps:
+    - name: Upload to S3
+      env:
+        AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+      run: |
+        DATE=$(date +%Y-%m-%d)
+        aws s3 cp reports/new_detections_*.csv s3://your-bucket/reports/$DATE/
+
+        # 生成下载链接
+        DOWNLOAD_URL=$(aws s3 presign s3://your-bucket/reports/$DATE/new_detections_$DATE.csv --expires-in 604800)
+        echo "Download URL: $DOWNLOAD_URL"
+
+# ============================================
+# 方案5: 飞书通知
+# ============================================
+feishu-notification:
+  steps:
+    - name: Send Feishu Notification
+      env:
+        FEISHU_WEBHOOK: ${{ secrets.FEISHU_WEBHOOK }}
+      run: |
+        NEW_COUNT=$(wc -l < reports/new_detections_*.csv)
+        curl -X POST "$FEISHU_WEBHOOK" \
+          -H 'Content-Type: application/json' \
+          -d "{
+            \"msg_type\": \"interactive\",
+            \"card\": {
+              \"header\": {
+                \"title\": {\"tag\": \"plain_text\", \"content\": \"每日盗版检测报告\"}
+              },
+              \"elements\": [
+                {\"tag\": \"div\", \"text\": {\"tag\": \"lark_md\", \"content\": \"**新检测视频数**: ${NEW_COUNT}\"}},
+                {\"tag\": \"div\", \"text\": {\"tag\": \"lark_md\", \"content\": \"**检测时间**: $(date)\"}},
+                {\"tag\": \"action\", \"actions\": [{\"tag\": \"button\", \"text\": {\"tag\": \"plain_text\", \"content\": \"查看报告\"}, \"url\": \"https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}\"}]}
+              ]
+            }
+          }"

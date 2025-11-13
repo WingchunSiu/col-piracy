@@ -141,13 +141,7 @@ def main():
             else:
                 video_info['api_status'] = 'active'
 
-            # Update geo-blocking info
-            if response.get('exists'):
-                geoblocking = response.get('geoblocking', [])
-                blocked_regions, _ = parse_geoblocking(geoblocking)
-
-                video_info['geoblocking'] = geoblocking
-                video_info['blocked_regions'] = blocked_regions
+            # Skip geo-blocking check (too slow and not needed for daily reports)
 
             # Update last checked time
             video_info['api_last_checked'] = today_s
@@ -190,16 +184,6 @@ def main():
             days_tracked = 0
 
         api_status = video_info.get('api_status', 'unknown')
-        blocked_regions = video_info.get('blocked_regions', [])
-
-        # Geo status summary
-        if api_status == 'removed':
-            geo_status = 'N/A'
-        elif blocked_regions:
-            geo_status = f"{','.join(blocked_regions)}屏蔽"
-        else:
-            geo_status = '全球可见'
-
         action_needed = infer_action_needed(api_status, days_tracked)
 
         rows.append([
@@ -211,7 +195,6 @@ def main():
             first_seen_str,
             str(days_tracked),
             api_status,
-            geo_status,
             video_info.get('api_last_checked', ''),
             action_needed,
         ])
@@ -221,13 +204,13 @@ def main():
         w = csv.writer(f)
         w.writerow([
             'platform', 'video_id', 'title', 'url', 'uploader',
-            'first_seen', 'days_tracked', 'api_status', 'geo_status',
+            'first_seen', 'days_tracked', 'api_status',
             'last_checked', 'action_needed'
         ])
 
         # Sort by action priority (needs followup first, then by days tracked)
         def sort_key(r):
-            action = r[10]  # action_needed column
+            action = r[9]  # action_needed column
             days_tracked = int(r[6]) if r[6].isdigit() else 0
 
             # Priority order

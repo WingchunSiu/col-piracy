@@ -1,0 +1,148 @@
+name: Daily Piracy Detection
+
+on:
+  schedule:
+    # 每天 UTC 1:00 (北京时间 9:00)
+    - cron: '0 1 * * *'
+  workflow_dispatch:  # 允许手动触发
+
+jobs:
+  detect:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: |
+          pip install -r requirements.txt || echo "No requirements.txt found"
+
+      - name: Download previous state
+        uses: actions/download-artifact@v4
+        with:
+          name: dailymotion-state
+          path: state/
+        continue-on-error: true  # 第一次运行时state不存在
+
+      - name: Run detection
+        env:
+          DAILYMOTION_PER_TERM_LIMIT: 200
+          DAILYMOTION_ENABLE_GEO_CHECK: false
+          DAILYMOTION_MIN_SCORE: 5.0
+        run: |
+          python3 -m src.pipeline.run_dailymotion
+
+      - name: Upload state for next run
+        uses: actions/upload-artifact@v4
+        with:
+          name: dailymotion-state
+          path: state/dailymotion_videos.json
+          retention-days: 90  # 保留90天
+
+      - name: Upload reports
+        uses: actions/upload-artifact@v4
+        with:
+          name: detection-reports-${{ github.run_number }}
+          path: reports/*.csv
+          retention-days: 30
+
+      - name: Send Feishu notification
+        if: always()
+        env:
+          FEISHU_WEBHOOK: ${{ secrets.FEISHU_WEBHOOK }}
+        run: |
+          # Count new detections
+          if [ -f reports/new_detections_*.csv ]; then
+            NEW_COUNT=$(($(wc -l < reports/new_detections_*.csv) - 1))
+          else
+            NEW_COUNT=0
+          fi
+
+          # Get download link
+          DOWNLOAD_URL="https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+
+          # Send notification
+          curl -X POST "$FEISHU_WEBHOOK" \
+            -H 'Content-Type: application/json' \
+            -d "{
+              \"msg_type\": \"interactive\",
+              \"card\": {
+                \"header\": {
+                  \"title\": {
+                    \"tag\": \"plain_text\",
+                    \"content\": \"📊 每日盗版检测报告\"
+                  },
+                  \"template\": \"blue\"
+                },
+                \"elements\": [
+                  {
+                    \"tag\": \"div\",
+                    \"text\": {
+                      \"tag\": \"lark_md\",
+                      \"content\": \"**检测时间**: $(date '+%Y-%m-%d %H:%M')\\n**新检测视频数**: ${NEW_COUNT}\"
+                    }
+                  },
+                  {
+                    \"tag\": \"hr\"
+                  },
+                  {
+                    \"tag\": \"action\",
+                    \"actions\": [
+                      {
+                        \"tag\": \"button\",
+                        \"text\": {
+                          \"tag\": \"plain_text\",
+                          \"content\": \"📥 下载报告\"
+                        },
+                        \"type\": \"primary\",
+                        \"url\": \"${DOWNLOAD_URL}\"
+                      }
+                    ]
+                  }
+                ]
+              }
+            }"
+
+  # 每天运行状态检查
+  recheck:
+    runs-on: ubuntu-latest
+    needs: detect
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Download state
+        uses: actions/download-artifact@v4
+        with:
+          name: dailymotion-state
+          path: state/
+
+      - name: Run recheck
+        run: |
+          python3 -m src.pipeline.recheck_videos
+
+      - name: Install pandas and openpyxl
+        run: |
+          pip install pandas openpyxl
+
+      - name: Generate combined Excel report
+        run: |
+          python3 -m src.pipeline.generate_report
+
+      - name: Upload combined report
+        uses: actions/upload-artifact@v4
+        with:
+          name: piracy-report-${{ github.run_number }}
+          path: reports/piracy_report_*.xlsx

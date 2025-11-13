@@ -285,8 +285,7 @@ def main():
             'dailymotion', h.get('id', ''), title, h.get('url', ''), uploader,
             str(h.get('duration', '')),
             f"{score:.1f}",
-            'new' if is_new else 'existing',
-            geo_status
+            'new' if is_new else 'existing'
         ])
 
     # Carry over previously seen videos that weren't re-detected today
@@ -304,7 +303,7 @@ def main():
     out_csv = os.path.join(out_dir, f'dailymotion_candidates_{today_s}.csv')
     with open(out_csv, 'w', encoding='utf-8', newline='') as f:
         w = csv.writer(f)
-        w.writerow(['platform', 'video_id', 'title', 'url', 'uploader', 'duration_sec', 'score', 'status', 'geo_status'])
+        w.writerow(['platform', 'video_id', 'title', 'url', 'uploader', 'duration_sec', 'score', 'status'])
         # Sort: score desc
         def sort_key(r):
             try:
@@ -323,7 +322,7 @@ def main():
         new_csv = os.path.join(out_dir, f'new_detections_{today_s}.csv')
         with open(new_csv, 'w', encoding='utf-8', newline='') as f:
             w = csv.writer(f)
-            w.writerow(['platform', 'video_id', 'title', 'url', 'uploader', 'duration_sec', 'score', 'status', 'geo_status'])
+            w.writerow(['platform', 'video_id', 'title', 'url', 'uploader', 'duration_sec', 'score', 'status'])
             for r in sorted(new_rows, key=sort_key):
                 w.writerow(r)
         print(f'Wrote {new_csv} with {len(new_rows)} new detections (for operations team)')
