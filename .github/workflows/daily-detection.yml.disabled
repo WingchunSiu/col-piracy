@@ -1,0 +1,100 @@
+name: Daily Piracy Detection
+
+on:
+  schedule:
+    # 每天 UTC 21:00 (北京时间 5:00)
+    - cron: '0 21 * * *'
+  workflow_dispatch:  # 允许手动触发
+
+jobs:
+  detect:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: |
+          pip install -r requirements.txt || echo "No requirements.txt found"
+
+      - name: Download previous state
+        uses: actions/download-artifact@v4
+        with:
+          name: dailymotion-state
+          path: state/
+        continue-on-error: true  # 第一次运行时state不存在
+
+      - name: Run detection
+        env:
+          DAILYMOTION_PER_TERM_LIMIT: 200
+          DAILYMOTION_ENABLE_GEO_CHECK: false
+          DAILYMOTION_MIN_SCORE: 5.0
+        run: |
+          python3 -m src.pipeline.run_dailymotion
+
+      - name: Upload state for next run
+        uses: actions/upload-artifact@v4
+        with:
+          name: dailymotion-state
+          path: state/dailymotion_videos.json
+          retention-days: 90  # 保留90天
+
+      - name: Upload CSV reports (backup)
+        uses: actions/upload-artifact@v4
+        with:
+          name: csv-reports-${{ github.run_number }}
+          path: reports/*.csv
+          retention-days: 30
+
+  # 每天运行状态检查
+  recheck:
+    runs-on: ubuntu-latest
+    needs: detect
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Download state
+        uses: actions/download-artifact@v4
+        with:
+          name: dailymotion-state
+          path: state/
+
+      - name: Run recheck
+        run: |
+          python3 -m src.pipeline.recheck_videos
+
+      - name: Upload to Feishu Sheets
+        env:
+          FEISHU_APP_ID: ${{ secrets.FEISHU_APP_ID }}
+          FEISHU_APP_SECRET: ${{ secrets.FEISHU_APP_SECRET }}
+          FEISHU_SPREADSHEET_TOKEN: ${{ secrets.FEISHU_SPREADSHEET_TOKEN }}
+          FEISHU_WEBHOOK: ${{ secrets.FEISHU_WEBHOOK }}
+        run: |
+          python3 -m src.pipeline.upload_to_feishu_sheets
+
+      - name: Upload state after cleanup
+        uses: actions/upload-artifact@v4
+        with:
+          name: dailymotion-state
+          path: state/dailymotion_videos.json
+          retention-days: 90
+
+      - name: Upload CSV reports (backup)
+        uses: actions/upload-artifact@v4
+        with:
+          name: csv-reports-${{ github.run_number }}
+          path: reports/*.csv
+          retention-days: 30

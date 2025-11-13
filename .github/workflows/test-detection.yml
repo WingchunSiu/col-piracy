@@ -1,0 +1,119 @@
+name: Test Detection (No Feishu)
+
+on:
+  workflow_dispatch:  # 只允许手动触发
+
+jobs:
+  detect:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: |
+          pip install -r requirements.txt || echo "No requirements.txt found"
+
+      - name: Download previous state
+        uses: actions/download-artifact@v4
+        with:
+          name: dailymotion-state-test
+          path: state/
+        continue-on-error: true  # 第一次运行时state不存在
+
+      - name: Run detection
+        env:
+          DAILYMOTION_PER_TERM_LIMIT: 200
+          DAILYMOTION_ENABLE_GEO_CHECK: false
+          DAILYMOTION_MIN_SCORE: 5.0
+        run: |
+          python3 -m src.pipeline.run_dailymotion
+
+      - name: Upload state for next run
+        uses: actions/upload-artifact@v4
+        with:
+          name: dailymotion-state-test
+          path: state/dailymotion_videos.json
+          retention-days: 90
+
+      - name: Upload detection reports
+        uses: actions/upload-artifact@v4
+        with:
+          name: detection-reports-test-${{ github.run_number }}
+          path: reports/*.csv
+          retention-days: 30
+
+  recheck:
+    runs-on: ubuntu-latest
+    needs: detect
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Download state
+        uses: actions/download-artifact@v4
+        with:
+          name: dailymotion-state-test
+          path: state/
+
+      - name: Run recheck
+        run: |
+          python3 -m src.pipeline.recheck_videos
+
+      - name: Install pandas and openpyxl
+        run: |
+          pip install pandas openpyxl
+
+      - name: Generate Excel report
+        run: |
+          python3 -m src.pipeline.generate_report
+
+      - name: Upload state after cleanup
+        uses: actions/upload-artifact@v4
+        with:
+          name: dailymotion-state-test
+          path: state/dailymotion_videos.json
+          retention-days: 90
+
+      - name: Upload all reports
+        uses: actions/upload-artifact@v4
+        with:
+          name: all-reports-test-${{ github.run_number }}
+          path: |
+            reports/*.csv
+            reports/*.xlsx
+          retention-days: 30
+
+      - name: Summary
+        run: |
+          echo "=== Test Run Summary ==="
+          echo ""
+          echo "Files generated:"
+          ls -lh reports/
+          echo ""
+          echo "State info:"
+          python3 -c "
+          import json
+          with open('state/dailymotion_videos.json', 'r') as f:
+              state = json.load(f)
+          print(f'Total videos in state: {len(state)}')
+          statuses = {}
+          for v in state.values():
+              status = v.get('api_status', 'unknown')
+              statuses[status] = statuses.get(status, 0) + 1
+          print('Status breakdown:')
+          for status, count in sorted(statuses.items()):
+              print(f'  {status}: {count}')
+          "

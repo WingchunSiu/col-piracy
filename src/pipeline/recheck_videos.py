@@ -162,12 +162,7 @@ def main():
         if len(errors) > 10:
             print(f'  ... and {len(errors) - 10} more')
 
-    # Save updated state
-    with open(state_path, 'w', encoding='utf-8') as f:
-        json.dump(state, f, ensure_ascii=False, indent=2)
-    print(f'Updated state saved to {state_path}')
-
-    # Generate status report
+    # Generate status report BEFORE cleanup (so removed videos appear in report)
     os.makedirs(out_dir, exist_ok=True)
     report_path = os.path.join(out_dir, f'status_update_{today_s}.csv')
 
@@ -231,6 +226,25 @@ def main():
             w.writerow(r)
 
     print(f'Status report written to {report_path} with {len(rows)} videos')
+
+    # Cleanup: Remove videos that are confirmed removed (AFTER generating report)
+    removed_count = 0
+    keys_to_remove = []
+    for key, video_info in state.items():
+        if video_info.get('api_status') == 'removed':
+            keys_to_remove.append(key)
+
+    for key in keys_to_remove:
+        del state[key]
+        removed_count += 1
+
+    if removed_count > 0:
+        print(f'\n✓ Cleaned up {removed_count} removed videos from state')
+
+        # Save updated state after cleanup
+        with open(state_path, 'w', encoding='utf-8') as f:
+            json.dump(state, f, ensure_ascii=False, indent=2)
+        print(f'Updated state saved to {state_path} ({len(state)} videos remaining)')
 
 
 if __name__ == '__main__':
