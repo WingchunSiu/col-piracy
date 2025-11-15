@@ -11,7 +11,7 @@ from typing import Dict, List, Optional, Set
 from src.keywords.expand import build_series_keywords
 from src.matching.score import compute_score
 from src.platforms.dailymotion import search_videos
-from src.database.supabase_db import video_exists, insert_videos, count_videos
+from src.database.supabase_db import get_existing_video_ids, insert_videos, count_videos
 
 
 def load_data(path: str) -> Dict:
@@ -94,13 +94,13 @@ def main():
             titles_by_sid = {sid: title for sid, title in titles_by_sid.items() if sid in keywords_by_sid}
 
     # Config
-    per_term_limit = _int_env('DAILYMOTION_PER_TERM_LIMIT', 200)
+    per_term_limit = _int_env('DAILYMOTION_PER_TERM_LIMIT', 300)
     primary_aliases = _int_env('DAILYMOTION_PRIMARY_ALIASES', 2, minimum=0)
     primary_per_term_limit = _int_env('DAILYMOTION_PRIMARY_PER_TERM_LIMIT', max(per_term_limit, 1), minimum=1)
     sleep_sec = _float_env('DAILYMOTION_SLEEP_SEC', 0.2)
     score_scale = _float_env('DAILYMOTION_SCORE_SCALE', 6.0, minimum=0.1)
-    min_duration_sec = _int_env('DAILYMOTION_MIN_DURATION_SEC', 300, minimum=0)
-    min_score = _float_env('DAILYMOTION_MIN_SCORE', 5.0, minimum=0.0)
+    min_duration_sec = _int_env('DAILYMOTION_MIN_DURATION_SEC', 1000, minimum=0)
+    min_score = _float_env('DAILYMOTION_MIN_SCORE', 5.5, minimum=0.0)
 
     # Search Dailymotion
     total_series = len(keywords_by_sid)
@@ -148,12 +148,13 @@ def main():
 
     print(f'{len(dedup)} unique candidates after dedupe')
 
-    # Score and filter
+    # Score and filter FIRST (before checking database)
     today = dt.date.today()
     today_s = today.isoformat()
 
-    videos_to_insert = []
-    rows = []
+    filtered_candidates = []
+    duration_filtered = 0
+    score_filtered = 0
 
     for key, h in dedup.items():
         title = h.get('title', '')
@@ -162,18 +163,53 @@ def main():
         raw_score = compute_score(title, aliases)
         score = _normalize_score(raw_score, score_scale)
 
-        # Filters
+        # Apply filters
         duration = h.get('duration', 0) or 0
         if min_duration_sec > 0 and duration < min_duration_sec:
-            continue
-        if min_score > 0.0 and score < min_score:
+            duration_filtered += 1
             continue
 
+        if min_score > 0.0 and score < min_score:
+            score_filtered += 1
+            continue
+
+        # Passed all filters
+        filtered_candidates.append({
+            'key': key,
+            'video': h,
+            'raw_score': raw_score,
+            'score': score,
+            'sid': sid,
+            'aliases': aliases
+        })
+
+    print(f'After filtering: {len(filtered_candidates)} candidates remain')
+    if duration_filtered:
+        print(f'  - Duration < {min_duration_sec}s: {duration_filtered}')
+    if score_filtered:
+        print(f'  - Score < {min_score}: {score_filtered}')
+
+    # Now batch check existing videos (only filtered ones)
+    filtered_video_ids = [c['video']['id'] for c in filtered_candidates if c['video'].get('id')]
+    print(f'Checking which {len(filtered_video_ids)} videos already exist in database...')
+    existing_ids = get_existing_video_ids(filtered_video_ids, platform='dailymotion')
+    print(f'Found {len(existing_ids)} existing videos')
+
+    # Prepare final data
+    videos_to_insert = []
+    rows = []
+
+    for c in filtered_candidates:
+        h = c['video']
+        raw_score = c['raw_score']
+        score = c['score']
+        sid = c['sid']
+        title = h.get('title', '')
         video_id = h.get('id')
         uploader = h.get('owner.username') or ''
 
         # Check if new
-        is_new = not video_exists(video_id)
+        is_new = video_id not in existing_ids
 
         # Prepare for database
         video_data = {
@@ -197,6 +233,7 @@ def main():
         videos_to_insert.append(video_data)
 
         # CSV row
+        duration = h.get('duration', 0) or 0
         rows.append([
             'dailymotion', video_id, title, h.get('url', ''), uploader,
             str(duration), f"{score:.1f}", 'new' if is_new else 'existing'

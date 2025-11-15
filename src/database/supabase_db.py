@@ -30,6 +30,23 @@ def video_exists(video_id: str, platform: str = 'dailymotion') -> bool:
     return len(response.data) > 0
 
 
+def get_existing_video_ids(video_ids: List[str], platform: str = 'dailymotion', batch_size: int = 1000) -> set:
+    """Batch check which video IDs exist. Returns set of existing IDs."""
+    if not video_ids:
+        return set()
+
+    client = get_client()
+    existing = set()
+
+    # Process in batches to avoid URL length limits
+    for i in range(0, len(video_ids), batch_size):
+        batch = video_ids[i:i + batch_size]
+        response = client.table('videos').select('video_id').eq('platform', platform).in_('video_id', batch).execute()
+        existing.update(row['video_id'] for row in response.data)
+
+    return existing
+
+
 def insert_videos(videos: List[Dict]) -> int:
     """Insert/update videos (upsert). Returns count."""
     if not videos:
@@ -40,18 +57,25 @@ def insert_videos(videos: List[Dict]) -> int:
 
 
 def get_videos_to_recheck(min_days: int = 2, max_days: int = 30) -> List[Dict]:
-    """Get videos needing recheck (min_days to max_days old, active status)."""
+    """
+    Get videos needing recheck (min_days to max_days old, active status).
+    Set min_days=0 to include all videos up to max_days old.
+    """
     client = get_client()
     today = date.today()
 
-    min_date = date.fromordinal(today.toordinal() - max_days)
-    max_date = date.fromordinal(today.toordinal() - min_days)
+    query = client.table('videos').select('*')
 
-    response = client.table('videos') \
-        .select('*') \
-        .gte('first_seen', min_date.isoformat()) \
-        .lte('first_seen', max_date.isoformat()) \
-        .execute()
+    # Apply date filters
+    if max_days > 0:
+        min_date = date.fromordinal(today.toordinal() - max_days)
+        query = query.gte('first_seen', min_date.isoformat())
+
+    if min_days > 0:
+        max_date = date.fromordinal(today.toordinal() - min_days)
+        query = query.lte('first_seen', max_date.isoformat())
+
+    response = query.execute()
 
     # Filter for active or null status (Supabase doesn't support .in_([..., None]))
     return [v for v in response.data if v.get('api_status') in ('active', None)]
