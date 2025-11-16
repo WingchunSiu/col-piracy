@@ -20,8 +20,8 @@ jobs:
 
       - name: Install dependencies
         run: |
+          pip install --upgrade pip
           pip install -r requirements.txt
-          pip install pandas openpyxl
 
       - name: Run detection (search Dailymotion)
         env:
@@ -55,13 +55,6 @@ jobs:
           name: piracy-report-${{ github.run_number }}
           path: reports/*.xlsx
           retention-days: 30
-
-      - name: Upload CSV reports (for reference)
-        uses: actions/upload-artifact@v4
-        with:
-          name: csv-reports-${{ github.run_number }}
-          path: reports/*.csv
-          retention-days: 7
 
       - name: Summary
         run: |
