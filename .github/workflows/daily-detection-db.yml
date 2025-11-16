@@ -1,0 +1,79 @@
+name: Daily Piracy Detection (Database)
+
+on:
+  schedule:
+    - cron: '0 20 * * *'  # 每天北京时间 04:00 AM (UTC 20:00, 前一天)
+  workflow_dispatch:  # 允许手动触发
+
+jobs:
+  detect-and-report:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: |
+          pip install -r requirements.txt
+          pip install pandas openpyxl
+
+      - name: Run detection (search Dailymotion)
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_KEY: ${{ secrets.SUPABASE_KEY }}
+          DAILYMOTION_PER_TERM_LIMIT: 300
+          DAILYMOTION_MIN_DURATION_SEC: 1000
+          DAILYMOTION_MIN_SCORE: 5.5
+        run: |
+          python3 -m src.pipeline.run_dailymotion_db
+
+      - name: Run recheck (check video status)
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_KEY: ${{ secrets.SUPABASE_KEY }}
+          DAILYMOTION_RECHECK_MIN_DAYS: 0
+          DAILYMOTION_RECHECK_MAX_DAYS: 30
+        run: |
+          python3 -m src.pipeline.recheck_videos_db
+
+      - name: Generate Excel report
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_KEY: ${{ secrets.SUPABASE_KEY }}
+        run: |
+          python3 -m src.pipeline.generate_report_db
+
+      - name: Upload Excel report
+        uses: actions/upload-artifact@v4
+        with:
+          name: piracy-report-${{ github.run_number }}
+          path: reports/*.xlsx
+          retention-days: 30
+
+      - name: Upload CSV reports (for reference)
+        uses: actions/upload-artifact@v4
+        with:
+          name: csv-reports-${{ github.run_number }}
+          path: reports/*.csv
+          retention-days: 7
+
+      - name: Summary
+        run: |
+          echo "=== Daily Detection Summary ==="
+          echo ""
+          echo "Generated files:"
+          ls -lh reports/
+          echo ""
+          echo "✓ Excel report uploaded as artifact 'piracy-report-${{ github.run_number }}'"
+          echo ""
+          echo "To download:"
+          echo "1. Go to https://github.com/${{ github.repository }}/actions"
+          echo "2. Click on this workflow run"
+          echo "3. Scroll down to 'Artifacts' section"
+          echo "4. Download 'piracy-report-${{ github.run_number }}'"
