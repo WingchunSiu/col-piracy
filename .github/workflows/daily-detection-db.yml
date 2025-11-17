@@ -37,7 +37,7 @@ jobs:
         env:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_KEY: ${{ secrets.SUPABASE_KEY }}
-          DAILYMOTION_RECHECK_MIN_DAYS: 0
+          DAILYMOTION_RECHECK_MIN_DAYS: 1
           DAILYMOTION_RECHECK_MAX_DAYS: 30
         run: |
           python3 -m src.pipeline.recheck_videos_db

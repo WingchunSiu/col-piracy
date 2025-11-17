@@ -9,7 +9,6 @@ from src.platforms.dailymotion import get_video_status
 from src.database.supabase_db import (
     get_videos_to_recheck,
     update_video_status,
-    delete_removed_videos,
     get_all_videos_for_report,
     count_videos
 )
@@ -175,13 +174,7 @@ def main():
         w.writerows(sorted(rows, key=sort_key))
 
     print(f'Status report written to {report_path} with {len(rows)} videos')
-
-    # Cleanup: delete removed videos from database
-    removed_count = delete_removed_videos()
-    if removed_count > 0:
-        print(f'\n✓ Cleaned up {removed_count} removed videos from database')
-
-    print(f'Total videos remaining: {count_videos()}')
+    print(f'Total videos in database: {count_videos()}')
 
 
 if __name__ == '__main__':

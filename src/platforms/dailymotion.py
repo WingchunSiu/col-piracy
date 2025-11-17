@@ -139,6 +139,19 @@ def get_video_status(video_id: str) -> Dict:
     except urllib.error.HTTPError as e:
         if e.code == 404:
             return {'exists': False}
+        if e.code in (401, 403):
+            # Private videos (and some region locked content) respond with 403, so treat as private
+            return {
+                'exists': True,
+                'private': True,
+                'password_protected': False,
+                'status': 'forbidden',
+                'published': False,
+                'geoblocking': [],
+                'views_total': 0,
+                'updated_time': '',
+                'duration': 0,
+            }
         # Fail fast - don't catch other errors
         raise
     except Exception:
@@ -218,4 +231,3 @@ def search_videos(terms: Iterable[str], per_term_limit: int = 10, sleep_sec: flo
             time.sleep(sleep_sec)
 
     return results
-
