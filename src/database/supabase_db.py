@@ -82,6 +82,9 @@ def get_videos_to_recheck(min_days: int = 2, max_days: int = 30, limit: int = 10
             max_date = date.fromordinal(today.toordinal() - min_days)
             query = query.lte('first_seen', max_date.isoformat())
 
+        # Add deterministic ordering to ensure consistent pagination
+        query = query.order('first_seen', desc=False).order('video_id', desc=False)
+
         # Pagination using range
         query = query.range(offset, offset + page_size - 1)
         response = query.execute()
