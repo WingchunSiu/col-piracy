@@ -56,29 +56,49 @@ def insert_videos(videos: List[Dict]) -> int:
     return len(videos)
 
 
-def get_videos_to_recheck(min_days: int = 2, max_days: int = 30) -> List[Dict]:
+def get_videos_to_recheck(min_days: int = 2, max_days: int = 30, limit: int = 10000) -> List[Dict]:
     """
-    Get videos needing recheck (min_days to max_days old, active status).
+    Get videos needing recheck (min_days to max_days old, active or null status).
     Set min_days=0 to include all videos up to max_days old.
+    Uses pagination to fetch beyond Supabase's 1000-row default limit.
     """
     client = get_client()
     today = date.today()
 
-    query = client.table('videos').select('*')
+    # Fetch all matching videos in batches to avoid 1000 row limit
+    all_videos = []
+    page_size = 1000
+    offset = 0
 
-    # Apply date filters
-    if max_days > 0:
-        min_date = date.fromordinal(today.toordinal() - max_days)
-        query = query.gte('first_seen', min_date.isoformat())
+    while True:
+        query = client.table('videos').select('*')
 
-    if min_days > 0:
-        max_date = date.fromordinal(today.toordinal() - min_days)
-        query = query.lte('first_seen', max_date.isoformat())
+        # Apply date filters
+        if max_days > 0:
+            min_date = date.fromordinal(today.toordinal() - max_days)
+            query = query.gte('first_seen', min_date.isoformat())
 
-    response = query.execute()
+        if min_days > 0:
+            max_date = date.fromordinal(today.toordinal() - min_days)
+            query = query.lte('first_seen', max_date.isoformat())
 
-    # Filter for active or null status (Supabase doesn't support .in_([..., None]))
-    return [v for v in response.data if v.get('api_status') in ('active', None)]
+        # Pagination using range
+        query = query.range(offset, offset + page_size - 1)
+        response = query.execute()
+
+        if not response.data:
+            break
+
+        all_videos.extend(response.data)
+        offset += page_size
+
+        # Stop if we've reached the limit or got less than page_size (last page)
+        if len(all_videos) >= limit or len(response.data) < page_size:
+            break
+
+    # Filter for active or null status (videos that might still be up)
+    filtered = [v for v in all_videos if v.get('api_status') in ('active', None)]
+    return filtered[:limit]
 
 
 def update_video_status(video_id: str, api_status: str, platform: str = 'dailymotion'):
@@ -98,18 +118,34 @@ def delete_removed_videos() -> int:
 
 
 def get_all_videos_for_report(max_days: int = 30) -> List[Dict]:
-    """Get all videos for status report (within max_days)."""
+    """Get all videos for status report (within max_days). Uses pagination."""
     client = get_client()
     today = date.today()
     min_date = date.fromordinal(today.toordinal() - max_days)
 
-    response = client.table('videos') \
-        .select('*') \
-        .gte('first_seen', min_date.isoformat()) \
-        .order('first_seen', desc=True) \
-        .execute()
+    # Fetch all videos in batches to avoid 1000 row limit
+    all_videos = []
+    page_size = 1000
+    offset = 0
 
-    return response.data
+    while True:
+        response = client.table('videos') \
+            .select('*') \
+            .gte('first_seen', min_date.isoformat()) \
+            .order('first_seen', desc=True) \
+            .range(offset, offset + page_size - 1) \
+            .execute()
+
+        if not response.data:
+            break
+
+        all_videos.extend(response.data)
+        offset += page_size
+
+        if len(response.data) < page_size:
+            break
+
+    return all_videos
 
 
 def count_videos() -> int:

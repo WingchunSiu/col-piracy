@@ -41,26 +41,55 @@ def generate_report_from_db(report_date: str = None, tracking_days: int = 30):
     client = get_client()
 
     # Sheet 1: 今日新检测 (videos detected today)
+    # Use pagination to handle >1000 new detections
     print(f'Fetching new detections for {report_date}...')
-    new_detections_response = client.table('videos') \
-        .select('*') \
-        .eq('first_seen', report_date) \
-        .order('score', desc=True) \
-        .execute()
+    new_detections = []
+    offset = 0
+    page_size = 1000
 
-    new_detections = new_detections_response.data
+    while True:
+        response = client.table('videos') \
+            .select('*') \
+            .eq('first_seen', report_date) \
+            .order('score', desc=True) \
+            .range(offset, offset + page_size - 1) \
+            .execute()
+
+        if not response.data:
+            break
+
+        new_detections.extend(response.data)
+        offset += page_size
+
+        if len(response.data) < page_size:
+            break
+
     print(f'  Found {len(new_detections)} new detections')
 
     # Sheet 2: 往期追踪 (all videos within tracking window, including removed)
+    # Use pagination to handle >1000 videos
     print(f'Fetching videos from past {tracking_days} days...')
-    all_videos_response = client.table('videos') \
-        .select('*') \
-        .gte('first_seen', cutoff_date) \
-        .lt('first_seen', report_date) \
-        .order('first_seen', desc=True) \
-        .execute()
+    all_videos = []
+    offset = 0
 
-    all_videos = all_videos_response.data
+    while True:
+        response = client.table('videos') \
+            .select('*') \
+            .gte('first_seen', cutoff_date) \
+            .lt('first_seen', report_date) \
+            .order('first_seen', desc=True) \
+            .range(offset, offset + page_size - 1) \
+            .execute()
+
+        if not response.data:
+            break
+
+        all_videos.extend(response.data)
+        offset += page_size
+
+        if len(response.data) < page_size:
+            break
+
     print(f'  Found {len(all_videos)} videos in tracking window')
 
     # Process Sheet 1: 今日新检测
