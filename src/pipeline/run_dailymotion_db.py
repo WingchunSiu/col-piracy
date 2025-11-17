@@ -230,11 +230,10 @@ def main():
             'blocked_regions': [],
         }
 
-        # Only set first_seen for new videos to preserve original discovery date
+        # Only insert new videos to preserve first_seen and avoid unnecessary updates
         if is_new:
             video_data['first_seen'] = today_s
-
-        videos_to_insert.append(video_data)
+            videos_to_insert.append(video_data)
 
         # CSV row
         duration = h.get('duration', 0) or 0
