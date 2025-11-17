@@ -52,8 +52,18 @@ def insert_videos(videos: List[Dict]) -> int:
     if not videos:
         return 0
     client = get_client()
-    client.table('videos').upsert(videos).execute()
-    return len(videos)
+    try:
+        client.table('videos').upsert(videos).execute()
+        return len(videos)
+    except Exception as e:
+        print(f'Error inserting videos: {e}')
+        print(f'Total videos in batch: {len(videos)}')
+        # Print first video for debugging
+        if videos:
+            import json
+            print(f'First video sample:')
+            print(json.dumps(videos[0], indent=2, default=str))
+        raise
 
 
 def get_videos_to_recheck(min_days: int = 2, max_days: int = 30, limit: int = 10000) -> List[Dict]:
@@ -114,9 +124,11 @@ def update_video_status(video_id: str, api_status: str, platform: str = 'dailymo
 
 
 def delete_removed_videos() -> int:
-    """Delete removed videos. Returns count deleted."""
+    """Delete videos that are no longer accessible (removed, private, password protected, rejected). Returns count deleted."""
     client = get_client()
-    response = client.table('videos').delete().eq('api_status', 'removed').execute()
+    # Delete all videos with status indicating they're no longer accessible
+    statuses_to_delete = ['removed', 'private', 'password_protected', 'rejected']
+    response = client.table('videos').delete().in_('api_status', statuses_to_delete).execute()
     return len(response.data) if response.data else 0
 
 
