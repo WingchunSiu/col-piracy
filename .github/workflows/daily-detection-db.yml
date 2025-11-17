@@ -8,6 +8,8 @@ on:
 jobs:
   detect-and-report:
     runs-on: ubuntu-latest
+    env:
+      TZ: 'Asia/Shanghai'  # 设置为北京时区
 
     steps:
       - name: Checkout code
