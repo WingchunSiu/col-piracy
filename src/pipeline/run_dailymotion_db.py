@@ -225,10 +225,13 @@ def main():
             'score': round(score, 3),
             'series_id': sid,
             'source_term': h.get('__source_term'),
-            'first_seen': today_s,
             'geoblocking': [],
             'blocked_regions': [],
         }
+
+        # Only set first_seen for new videos to preserve original discovery date
+        if is_new:
+            video_data['first_seen'] = today_s
 
         videos_to_insert.append(video_data)
 
