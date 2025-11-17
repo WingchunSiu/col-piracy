@@ -2,6 +2,7 @@
 """Generate Excel report from database with two sheets."""
 import os
 import sys
+import json
 from datetime import date, timedelta
 from pathlib import Path
 import pandas as pd
@@ -99,6 +100,7 @@ def generate_report_from_db(report_date: str = None, tracking_days: int = 30):
             '平台': video.get('platform', 'dailymotion'),
             '视频ID': video.get('video_id', ''),
             '标题': video.get('title', ''),
+            '剧名': video.get('series_name', ''),
             'URL': video.get('url', ''),
             '上传者': video.get('uploader', ''),
             '时长(秒)': video.get('duration_sec', ''),
@@ -127,6 +129,7 @@ def generate_report_from_db(report_date: str = None, tracking_days: int = 30):
             '平台': video.get('platform', 'dailymotion'),
             '视频ID': video.get('video_id', ''),
             '标题': video.get('title', ''),
+            '剧名': video.get('series_name', ''),
             'URL': video.get('url', ''),
             '上传者': video.get('uploader', ''),
             '首次检测': video.get('first_seen', ''),
@@ -136,8 +139,11 @@ def generate_report_from_db(report_date: str = None, tracking_days: int = 30):
             '剧集ID': video.get('series_id', '')
         })
 
-    # Sort sheet2: 未下架 first, then by days_tracked (desc)
-    sheet2_data.sort(key=lambda x: (x['当前状态'] == '已下架 ✓', -x['追踪天数']))
+    # Sort sheet1: by series name, then by score (desc)
+    sheet1_data.sort(key=lambda x: (x['剧名'], -x['分数']))
+
+    # Sort sheet2: by series name, then 未下架 first, then by days_tracked (desc)
+    sheet2_data.sort(key=lambda x: (x['剧名'], x['当前状态'] == '已下架 ✓', -x['追踪天数']))
 
     # Create DataFrames
     df_new = pd.DataFrame(sheet1_data)

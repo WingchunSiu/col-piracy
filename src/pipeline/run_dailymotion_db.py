@@ -211,6 +211,9 @@ def main():
         # Check if new
         is_new = video_id not in existing_ids
 
+        # Get series name from titles_by_sid
+        series_name = titles_by_sid.get(sid, '')
+
         # Prepare for database
         video_data = {
             'platform': 'dailymotion',
@@ -224,6 +227,7 @@ def main():
             'raw_score': round(raw_score, 3),
             'score': round(score, 3),
             'series_id': sid,
+            'series_name': series_name,
             'source_term': h.get('__source_term'),
             'geoblocking': [],
             'blocked_regions': [],
