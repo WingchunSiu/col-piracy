@@ -15,8 +15,14 @@ from src.database.supabase_db import get_client, delete_removed_videos, count_vi
 
 def _compute_status(api_status: str) -> str:
     """Compute human-readable status."""
-    if api_status in ('removed', 'private', 'password_protected', 'rejected'):
-        return '已下架 ✓'
+    if api_status == 'removed':
+        return '已删除 ✓'
+    elif api_status == 'private':
+        return '已私密（需催办）'
+    elif api_status == 'password_protected':
+        return '已加密 ✓'
+    elif api_status == 'rejected':
+        return '被拒绝 ✓'
     return '未下架'
 
 
@@ -142,8 +148,16 @@ def generate_report_from_db(report_date: str = None, tracking_days: int = 30):
     # Sort sheet1: by series name, then by score (desc)
     sheet1_data.sort(key=lambda x: (x['剧名'], -x['分数']))
 
-    # Sort sheet2: by series name, then 未下架 first, then by days_tracked (desc)
-    sheet2_data.sort(key=lambda x: (x['剧名'], x['当前状态'] == '已下架 ✓', -x['追踪天数']))
+    # Sort sheet2: by series name, then status priority (未下架 > 已私密需催办 > 已删除等), then by days_tracked (desc)
+    def status_priority(status):
+        if status == '未下架':
+            return 0  # 最优先：还在线的视频
+        elif '需催办' in status:
+            return 1  # 其次：需要催办的私密视频
+        else:
+            return 2  # 最后：已删除/已加密等
+
+    sheet2_data.sort(key=lambda x: (x['剧名'], status_priority(x['当前状态']), -x['追踪天数']))
 
     # Create DataFrames
     df_new = pd.DataFrame(sheet1_data)

@@ -124,10 +124,11 @@ def update_video_status(video_id: str, api_status: str, platform: str = 'dailymo
 
 
 def delete_removed_videos() -> int:
-    """Delete videos that are no longer accessible (removed, private, password protected, rejected). Returns count deleted."""
+    """Delete videos that are permanently removed (404). Private videos are kept for follow-up. Returns count deleted."""
     client = get_client()
-    # Delete all videos with status indicating they're no longer accessible
-    statuses_to_delete = ['removed', 'private', 'password_protected', 'rejected']
+    # Only delete truly removed videos (404). Keep private videos for follow-up actions.
+    # password_protected and rejected are also permanently inaccessible, so delete them too.
+    statuses_to_delete = ['removed', 'password_protected', 'rejected']
     response = client.table('videos').delete().in_('api_status', statuses_to_delete).execute()
     return len(response.data) if response.data else 0
 
