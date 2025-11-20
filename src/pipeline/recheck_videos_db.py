@@ -115,7 +115,7 @@ def main():
     # Generate status report (all videos within max_days, including removed)
     print(f'\nGenerating status report...')
     today = dt.date.today()
-    all_videos = get_all_videos_for_report(max_days=recheck_max_days)
+    all_videos = get_all_videos_for_report(max_days=recheck_max_days, include_ignored=False)
 
     rows = []
     for video in all_videos:

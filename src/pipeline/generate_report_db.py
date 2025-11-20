@@ -58,6 +58,7 @@ def generate_report_from_db(report_date: str = None, tracking_days: int = 30):
         response = client.table('videos') \
             .select('*') \
             .eq('first_seen', report_date) \
+            .is_('ignore_reason', 'null') \
             .order('score', desc=True) \
             .range(offset, offset + page_size - 1) \
             .execute()
@@ -84,6 +85,7 @@ def generate_report_from_db(report_date: str = None, tracking_days: int = 30):
             .select('*') \
             .gte('first_seen', cutoff_date) \
             .lt('first_seen', report_date) \
+            .is_('ignore_reason', 'null') \
             .order('first_seen', desc=True) \
             .range(offset, offset + page_size - 1) \
             .execute()

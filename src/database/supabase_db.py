@@ -1,7 +1,7 @@
 """Supabase database operations for piracy detection system."""
 import os
 from datetime import date
-from typing import List, Dict
+from typing import List, Dict, Iterable
 from dotenv import load_dotenv
 from supabase import create_client, Client
 
@@ -66,6 +66,30 @@ def insert_videos(videos: List[Dict]) -> int:
         raise
 
 
+def _chunked(items: Iterable, size: int):
+    """Yield successive chunks from iterable."""
+    buf = []
+    for item in items:
+        buf.append(item)
+        if len(buf) >= size:
+            yield buf
+            buf = []
+    if buf:
+        yield buf
+
+
+def set_ignore_reason(video_ids: List[str], reason: str, platform: str = 'dailymotion', batch_size: int = 500) -> int:
+    """Mark a list of videos with an ignore reason. Returns count updated."""
+    if not video_ids:
+        return 0
+    client = get_client()
+    total = 0
+    for batch in _chunked(video_ids, batch_size):
+        response = client.table('videos').update({'ignore_reason': reason}).eq('platform', platform).in_('video_id', batch).execute()
+        total += len(response.data) if response.data else 0
+    return total
+
+
 def get_videos_to_recheck(min_days: int = 2, max_days: int = 30, limit: int = 10000) -> List[Dict]:
     """
     Get videos needing recheck (min_days to max_days old, active or null status).
@@ -93,7 +117,8 @@ def get_videos_to_recheck(min_days: int = 2, max_days: int = 30, limit: int = 10
             query = query.lte('first_seen', max_date.isoformat())
 
         # Add deterministic ordering to ensure consistent pagination
-        query = query.order('first_seen', desc=False).order('video_id', desc=False)
+        # Skip ignored videos and add deterministic ordering
+        query = query.is_('ignore_reason', 'null').order('first_seen', desc=False).order('video_id', desc=False)
 
         # Pagination using range
         query = query.range(offset, offset + page_size - 1)
@@ -133,7 +158,7 @@ def delete_removed_videos() -> int:
     return len(response.data) if response.data else 0
 
 
-def get_all_videos_for_report(max_days: int = 30) -> List[Dict]:
+def get_all_videos_for_report(max_days: int = 30, include_ignored: bool = True) -> List[Dict]:
     """Get all videos for status report (within max_days). Uses pagination."""
     client = get_client()
     today = date.today()
@@ -145,12 +170,11 @@ def get_all_videos_for_report(max_days: int = 30) -> List[Dict]:
     offset = 0
 
     while True:
-        response = client.table('videos') \
-            .select('*') \
-            .gte('first_seen', min_date.isoformat()) \
-            .order('first_seen', desc=True) \
-            .range(offset, offset + page_size - 1) \
-            .execute()
+        query = client.table('videos').select('*').gte('first_seen', min_date.isoformat()).range(offset, offset + page_size - 1)
+        if not include_ignored:
+            query = query.is_('ignore_reason', 'null')
+        query = query.order('first_seen', desc=True)
+        response = query.execute()
 
         if not response.data:
             break
