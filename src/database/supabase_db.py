@@ -134,8 +134,9 @@ def get_videos_to_recheck(min_days: int = 2, max_days: int = 30, limit: int = 10
         if len(all_videos) >= limit or len(response.data) < page_size:
             break
 
-    # Filter for active or null status (videos that might still be up)
-    filtered = [v for v in all_videos if v.get('api_status') in ('active', None)]
+    # Filter for active, null, or private status (videos that might still need tracking)
+    # Include private videos so we can continue checking if they eventually get removed
+    filtered = [v for v in all_videos if v.get('api_status') in ('active', 'private', None)]
     return filtered[:limit]
 
 
