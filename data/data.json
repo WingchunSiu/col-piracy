@@ -1151,6 +1151,54 @@
       "exclusive": null,
       "doc_reference": null,
       "cover": null
+    },
+    {
+      "series_id": "09b8a0f4-d5f1-5bdb-8aac-facb85279bba",
+      "canonical_title": "I Can’t Breathe, Mom...Daddy’s Killing Me",
+      "content_type": "自制剧",
+      "exclusive": false,
+      "doc_reference": null,
+      "cover": null
+    },
+    {
+      "series_id": "1485a159-8c01-5ac9-9c89-f787b01acb20",
+      "canonical_title": "Baby Queen of Snooker",
+      "content_type": "自制剧",
+      "exclusive": false,
+      "doc_reference": null,
+      "cover": null
+    },
+    {
+      "series_id": "826a0fc5-f294-5065-a0f7-abafd14da9e3",
+      "canonical_title": "The Heiress Returns:The Day I Fought Back",
+      "content_type": "自制剧",
+      "exclusive": false,
+      "doc_reference": null,
+      "cover": null
+    },
+    {
+      "series_id": "dd242773-2fb6-595d-a873-2b7dd7a000c3",
+      "canonical_title": "真珠の涙は私の恋",
+      "content_type": "自制剧",
+      "exclusive": false,
+      "doc_reference": null,
+      "cover": null
+    },
+    {
+      "series_id": "b519079d-765f-5f90-901c-d519ac649455",
+      "canonical_title": "Seven Day Revenge",
+      "content_type": "自制剧",
+      "exclusive": false,
+      "doc_reference": null,
+      "cover": null
+    },
+    {
+      "series_id": "a3e9ecdf-46ad-5add-b282-41baa2e3ec56",
+      "canonical_title": "The Way Back into Love",
+      "content_type": "自制剧",
+      "exclusive": false,
+      "doc_reference": null,
+      "cover": null
     }
   ],
   "aliases": [
@@ -4666,6 +4714,160 @@
       "name": "Fated to My Forbidden Guardian",
       "lang": null,
       "source": "sheet5",
+      "is_primary": false
+    },
+    {
+      "series_id": "09b8a0f4-d5f1-5bdb-8aac-facb85279bba",
+      "name": "I Can’t Breathe, Mom...Daddy’s Killing Me",
+      "lang": null,
+      "source": "sheet3",
+      "is_primary": true
+    },
+    {
+      "series_id": "09b8a0f4-d5f1-5bdb-8aac-facb85279bba",
+      "name": "Socorro, Mãe… Papai Está Me Matando",
+      "lang": "pt",
+      "source": "sheet3",
+      "is_primary": false
+    },
+    {
+      "series_id": "1485a159-8c01-5ac9-9c89-f787b01acb20",
+      "name": "Baby Queen of Snooker",
+      "lang": null,
+      "source": "sheet3",
+      "is_primary": true
+    },
+    {
+      "series_id": "826a0fc5-f294-5065-a0f7-abafd14da9e3",
+      "name": "The Heiress Returns:The Day I Fought Back",
+      "lang": null,
+      "source": "sheet3",
+      "is_primary": true
+    },
+    {
+      "series_id": "826a0fc5-f294-5065-a0f7-abafd14da9e3",
+      "name": "El Regreso de la Heredera: El Día que Luché",
+      "lang": "es",
+      "source": "sheet3",
+      "is_primary": false
+    },
+    {
+      "series_id": "826a0fc5-f294-5065-a0f7-abafd14da9e3",
+      "name": "A Herdeira Retorna",
+      "lang": "pt",
+      "source": "sheet3",
+      "is_primary": false
+    },
+    {
+      "series_id": "826a0fc5-f294-5065-a0f7-abafd14da9e3",
+      "name": "L'Héritière : Le Jour de ma Riposte",
+      "lang": "fr",
+      "source": "sheet3",
+      "is_primary": false
+    },
+    {
+      "series_id": "826a0fc5-f294-5065-a0f7-abafd14da9e3",
+      "name": "Die rückkehrende Erbin schlug zurück",
+      "lang": "de",
+      "source": "sheet3",
+      "is_primary": false
+    },
+    {
+      "series_id": "826a0fc5-f294-5065-a0f7-abafd14da9e3",
+      "name": "Il Ritorno dell‘Ereditaria: Il Giorno della Mia Rivolta",
+      "lang": "it",
+      "source": "sheet3",
+      "is_primary": false
+    },
+    {
+      "series_id": "dd242773-2fb6-595d-a873-2b7dd7a000c3",
+      "name": "真珠の涙は私の恋",
+      "lang": null,
+      "source": "sheet3",
+      "is_primary": true
+    },
+    {
+      "series_id": "b519079d-765f-5f90-901c-d519ac649455",
+      "name": "Seven Day Revenge",
+      "lang": null,
+      "source": "sheet3",
+      "is_primary": true
+    },
+    {
+      "series_id": "b519079d-765f-5f90-901c-d519ac649455",
+      "name": "Siete días para la venganza",
+      "lang": "es",
+      "source": "sheet3",
+      "is_primary": false
+    },
+    {
+      "series_id": "b519079d-765f-5f90-901c-d519ac649455",
+      "name": "Vingança em 7 Dias",
+      "lang": "pt",
+      "source": "sheet3",
+      "is_primary": false
+    },
+    {
+      "series_id": "b519079d-765f-5f90-901c-d519ac649455",
+      "name": "La Revanche de Sept Jours",
+      "lang": "fr",
+      "source": "sheet3",
+      "is_primary": false
+    },
+    {
+      "series_id": "b519079d-765f-5f90-901c-d519ac649455",
+      "name": "Sieben Tage Rache",
+      "lang": "de",
+      "source": "sheet3",
+      "is_primary": false
+    },
+    {
+      "series_id": "b519079d-765f-5f90-901c-d519ac649455",
+      "name": "Vendetta Sette Giorni",
+      "lang": "it",
+      "source": "sheet3",
+      "is_primary": false
+    },
+    {
+      "series_id": "a3e9ecdf-46ad-5add-b282-41baa2e3ec56",
+      "name": "The Way Back into Love",
+      "lang": null,
+      "source": "sheet3",
+      "is_primary": true
+    },
+    {
+      "series_id": "a3e9ecdf-46ad-5add-b282-41baa2e3ec56",
+      "name": "El Camino de Regreso al Amor",
+      "lang": "es",
+      "source": "sheet3",
+      "is_primary": false
+    },
+    {
+      "series_id": "a3e9ecdf-46ad-5add-b282-41baa2e3ec56",
+      "name": "De Volta ao Amor",
+      "lang": "pt",
+      "source": "sheet3",
+      "is_primary": false
+    },
+    {
+      "series_id": "a3e9ecdf-46ad-5add-b282-41baa2e3ec56",
+      "name": "Amour Trompeur",
+      "lang": "fr",
+      "source": "sheet3",
+      "is_primary": false
+    },
+    {
+      "series_id": "a3e9ecdf-46ad-5add-b282-41baa2e3ec56",
+      "name": "Der Weg zurück in die Liebe",
+      "lang": "de",
+      "source": "sheet3",
+      "is_primary": false
+    },
+    {
+      "series_id": "a3e9ecdf-46ad-5add-b282-41baa2e3ec56",
+      "name": "Ingannevole Destino",
+      "lang": "it",
+      "source": "sheet3",
       "is_primary": false
     }
   ],
