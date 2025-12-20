@@ -1231,6 +1231,38 @@
       "exclusive": false,
       "doc_reference": null,
       "cover": null
+    },
+    {
+      "series_id": "aa3ee2c8-8f69-5e94-98ba-47f67e1bceea",
+      "canonical_title": "Forbidden Love - Secretly Making Brother Mine",
+      "content_type": "自制剧",
+      "exclusive": false,
+      "doc_reference": null,
+      "cover": null
+    },
+    {
+      "series_id": "72269345-dd3e-50f1-8462-28c385cc3ecf",
+      "canonical_title": "The Alpha's Kept Woman",
+      "content_type": "自制剧",
+      "exclusive": false,
+      "doc_reference": null,
+      "cover": null
+    },
+    {
+      "series_id": "7ddde86b-1af8-597b-af45-9e3f56f2dd8e",
+      "canonical_title": "Out of Prison, Out of Blood Ties",
+      "content_type": "自制剧",
+      "exclusive": false,
+      "doc_reference": null,
+      "cover": null
+    },
+    {
+      "series_id": "a23c27f6-d271-5a60-b69f-3055cff936e1",
+      "canonical_title": "The Final Bell",
+      "content_type": null,
+      "exclusive": null,
+      "doc_reference": null,
+      "cover": null
     }
   ],
   "aliases": [
@@ -5335,6 +5367,384 @@
       "lang": null,
       "source": "canonical",
       "is_primary": true
+    },
+    {
+      "series_id": "aa3ee2c8-8f69-5e94-98ba-47f67e1bceea",
+      "name": "Forbidden Love - Secretly Making Brother Mine",
+      "lang": null,
+      "source": "sheet2",
+      "is_primary": true
+    },
+    {
+      "series_id": "72269345-dd3e-50f1-8462-28c385cc3ecf",
+      "name": "The Alpha's Kept Woman",
+      "lang": null,
+      "source": "sheet2",
+      "is_primary": true
+    },
+    {
+      "series_id": "7ddde86b-1af8-597b-af45-9e3f56f2dd8e",
+      "name": "Out of Prison, Out of Blood Ties",
+      "lang": null,
+      "source": "sheet2",
+      "is_primary": true
+    },
+    {
+      "series_id": "ffdf5fac-f18f-5101-8d38-7bfe926865b8",
+      "name": "내 마음을 겨눠",
+      "lang": "ko",
+      "source": "sheet3",
+      "is_primary": false
+    },
+    {
+      "series_id": "3fbffd55-8775-547e-9f86-40d70f772dd4",
+      "name": "Encuéntrame",
+      "lang": "es",
+      "source": "sheet3",
+      "is_primary": false
+    },
+    {
+      "series_id": "feb0b94c-3726-554a-b183-a303532f518d",
+      "name": "Mengasuh Anak Haram Suamiku",
+      "lang": "id",
+      "source": "sheet3",
+      "is_primary": false
+    },
+    {
+      "series_id": "feb0b94c-3726-554a-b183-a303532f518d",
+      "name": "남편의 사생아를 키웠다",
+      "lang": "ko",
+      "source": "sheet3",
+      "is_primary": false
+    },
+    {
+      "series_id": "feb0b94c-3726-554a-b183-a303532f518d",
+      "name": "夫の隠し子を育てる女",
+      "lang": "ja",
+      "source": "sheet3",
+      "is_primary": false
+    },
+    {
+      "series_id": "feb0b94c-3726-554a-b183-a303532f518d",
+      "name": "เกมรักกับดักแค้น",
+      "lang": "th",
+      "source": "sheet3",
+      "is_primary": false
+    },
+    {
+      "series_id": "d354145a-1041-55e8-b24d-0fdbdb7e1b70",
+      "name": "Reine billionnaire",
+      "lang": "fr",
+      "source": "sheet3",
+      "is_primary": false
+    },
+    {
+      "series_id": "75bb163d-6f54-5dcc-b849-3af3d7404d96",
+      "name": "Petugas Kebersihan Jadi Ny. Miliarder",
+      "lang": "id",
+      "source": "sheet3",
+      "is_primary": false
+    },
+    {
+      "series_id": "75bb163d-6f54-5dcc-b849-3af3d7404d96",
+      "name": "清掃員から億万長者の妻へ",
+      "lang": "ja",
+      "source": "sheet3",
+      "is_primary": false
+    },
+    {
+      "series_id": "75bb163d-6f54-5dcc-b849-3af3d7404d96",
+      "name": "จากสาวภารโรงสู่คุณนายมหาเศรษฐี",
+      "lang": "th",
+      "source": "sheet3",
+      "is_primary": false
+    },
+    {
+      "series_id": "02e55420-ab85-5e1c-a68f-bcc19df3b5b9",
+      "name": "Rache der wiedergeborenen Chefin",
+      "lang": "de",
+      "source": "sheet3",
+      "is_primary": false
+    },
+    {
+      "series_id": "c87047ec-27e3-542b-80c3-35078bbf4e27",
+      "name": "Die vermisste Wunderärztin",
+      "lang": "de",
+      "source": "sheet3",
+      "is_primary": false
+    },
+    {
+      "series_id": "2c5053d5-b1fb-53e5-acb6-bac0c0fcb43a",
+      "name": "Papá, Sálvame",
+      "lang": "es",
+      "source": "sheet3",
+      "is_primary": false
+    },
+    {
+      "series_id": "2c5053d5-b1fb-53e5-acb6-bac0c0fcb43a",
+      "name": "Papai, Me Salva!",
+      "lang": "pt",
+      "source": "sheet3",
+      "is_primary": false
+    },
+    {
+      "series_id": "2c5053d5-b1fb-53e5-acb6-bac0c0fcb43a",
+      "name": "Papa, Sauve-moi",
+      "lang": "fr",
+      "source": "sheet3",
+      "is_primary": false
+    },
+    {
+      "series_id": "2c5053d5-b1fb-53e5-acb6-bac0c0fcb43a",
+      "name": "Papa, rette mich",
+      "lang": "de",
+      "source": "sheet3",
+      "is_primary": false
+    },
+    {
+      "series_id": "2c5053d5-b1fb-53e5-acb6-bac0c0fcb43a",
+      "name": "Papà, salvami",
+      "lang": "it",
+      "source": "sheet3",
+      "is_primary": false
+    },
+    {
+      "series_id": "01842fa3-b15a-5658-9f74-683da3b313be",
+      "name": "Mi Escort es Multimillonario",
+      "lang": "es",
+      "source": "sheet3",
+      "is_primary": false
+    },
+    {
+      "series_id": "01842fa3-b15a-5658-9f74-683da3b313be",
+      "name": "Meu Garoto de Programa é Bilionário",
+      "lang": "pt",
+      "source": "sheet3",
+      "is_primary": false
+    },
+    {
+      "series_id": "01842fa3-b15a-5658-9f74-683da3b313be",
+      "name": "Mon Escorte est Un Milliardaire",
+      "lang": "fr",
+      "source": "sheet3",
+      "is_primary": false
+    },
+    {
+      "series_id": "01842fa3-b15a-5658-9f74-683da3b313be",
+      "name": "Mein Escort-Milliardär",
+      "lang": "de",
+      "source": "sheet3",
+      "is_primary": false
+    },
+    {
+      "series_id": "01842fa3-b15a-5658-9f74-683da3b313be",
+      "name": "Il mio ragazzo miliardario",
+      "lang": "it",
+      "source": "sheet3",
+      "is_primary": false
+    },
+    {
+      "series_id": "269de1d7-a11b-5858-8496-75d7160d990b",
+      "name": "El Millonario que se Enamoró de Mí",
+      "lang": "es",
+      "source": "sheet3",
+      "is_primary": false
+    },
+    {
+      "series_id": "269de1d7-a11b-5858-8496-75d7160d990b",
+      "name": "Depois do Pé na Bunda, Me Casei Com Um Bilionário",
+      "lang": "pt",
+      "source": "sheet3",
+      "is_primary": false
+    },
+    {
+      "series_id": "269de1d7-a11b-5858-8496-75d7160d990b",
+      "name": "Mon Bienfaiteur Millionnaire",
+      "lang": "fr",
+      "source": "sheet3",
+      "is_primary": false
+    },
+    {
+      "series_id": "269de1d7-a11b-5858-8496-75d7160d990b",
+      "name": "Nach der Scheidung verliebte sich der Milliardär in mich",
+      "lang": "de",
+      "source": "sheet3",
+      "is_primary": false
+    },
+    {
+      "series_id": "269de1d7-a11b-5858-8496-75d7160d990b",
+      "name": "Dopo il divorzio, ho fatto colpo sul miliardario",
+      "lang": "it",
+      "source": "sheet3",
+      "is_primary": false
+    },
+    {
+      "series_id": "593c04c0-3b1a-57a9-8df0-be321e27c442",
+      "name": "Trillizos Luchando por Ser el Papá de Mi Hijo",
+      "lang": "es",
+      "source": "sheet3",
+      "is_primary": false
+    },
+    {
+      "series_id": "593c04c0-3b1a-57a9-8df0-be321e27c442",
+      "name": "Trigêmeos Brigando pra Ser Pai do Meu Filho",
+      "lang": "pt",
+      "source": "sheet3",
+      "is_primary": false
+    },
+    {
+      "series_id": "593c04c0-3b1a-57a9-8df0-be321e27c442",
+      "name": "Triplés en Quête de Paternité",
+      "lang": "fr",
+      "source": "sheet3",
+      "is_primary": false
+    },
+    {
+      "series_id": "593c04c0-3b1a-57a9-8df0-be321e27c442",
+      "name": "Drillinge im Vaterkrieg",
+      "lang": "de",
+      "source": "sheet3",
+      "is_primary": false
+    },
+    {
+      "series_id": "593c04c0-3b1a-57a9-8df0-be321e27c442",
+      "name": "Tre gemelli per un papà",
+      "lang": "it",
+      "source": "sheet3",
+      "is_primary": false
+    },
+    {
+      "series_id": "09b8a0f4-d5f1-5bdb-8aac-facb85279bba",
+      "name": "No Puedo Respirar, Mamá... Papá Está Matándome.",
+      "lang": "es",
+      "source": "sheet3",
+      "is_primary": false
+    },
+    {
+      "series_id": "09b8a0f4-d5f1-5bdb-8aac-facb85279bba",
+      "name": "J'étouffe, Maman... Papa me tue",
+      "lang": "fr",
+      "source": "sheet3",
+      "is_primary": false
+    },
+    {
+      "series_id": "09b8a0f4-d5f1-5bdb-8aac-facb85279bba",
+      "name": "Mama, ich bekomme keine Luft",
+      "lang": "de",
+      "source": "sheet3",
+      "is_primary": false
+    },
+    {
+      "series_id": "09b8a0f4-d5f1-5bdb-8aac-facb85279bba",
+      "name": "Mamma, aiuto...non respiro",
+      "lang": "it",
+      "source": "sheet3",
+      "is_primary": false
+    },
+    {
+      "series_id": "a23c27f6-d271-5a60-b69f-3055cff936e1",
+      "name": "The Final Bell",
+      "lang": "en",
+      "source": "sheet3",
+      "is_primary": false
+    },
+    {
+      "series_id": "a23c27f6-d271-5a60-b69f-3055cff936e1",
+      "name": "Mutiara Air Mata",
+      "lang": "id",
+      "source": "sheet3",
+      "is_primary": false
+    },
+    {
+      "series_id": "a23c27f6-d271-5a60-b69f-3055cff936e1",
+      "name": "눈물이 진주가 되어",
+      "lang": "ko",
+      "source": "sheet3",
+      "is_primary": false
+    },
+    {
+      "series_id": "a23c27f6-d271-5a60-b69f-3055cff936e1",
+      "name": "รักแลกน้ําตา",
+      "lang": "th",
+      "source": "sheet3",
+      "is_primary": false
+    },
+    {
+      "series_id": "302318ec-9398-5a56-a9cf-d1dfe315077f",
+      "name": "Hidupku Hancur Dibuatnya",
+      "lang": "id",
+      "source": "sheet3",
+      "is_primary": false
+    },
+    {
+      "series_id": "302318ec-9398-5a56-a9cf-d1dfe315077f",
+      "name": "すり替えられた人生",
+      "lang": "ja",
+      "source": "sheet3",
+      "is_primary": false
+    },
+    {
+      "series_id": "302318ec-9398-5a56-a9cf-d1dfe315077f",
+      "name": "เล่ห์ลับสลับครรภ์",
+      "lang": "th",
+      "source": "sheet3",
+      "is_primary": false
+    },
+    {
+      "series_id": "6e9d5b18-7016-5708-832d-cc559a1f989f",
+      "name": "El Mal Padre lo Paga Siempre",
+      "lang": "es",
+      "source": "sheet3",
+      "is_primary": false
+    },
+    {
+      "series_id": "6e9d5b18-7016-5708-832d-cc559a1f989f",
+      "name": "Mamãe, me salve! Papai me deixou para morrer",
+      "lang": "pt",
+      "source": "sheet3",
+      "is_primary": false
+    },
+    {
+      "series_id": "6e9d5b18-7016-5708-832d-cc559a1f989f",
+      "name": "Maman, à l'aide !",
+      "lang": "fr",
+      "source": "sheet3",
+      "is_primary": false
+    },
+    {
+      "series_id": "6e9d5b18-7016-5708-832d-cc559a1f989f",
+      "name": "Der vergessene Geburtstag",
+      "lang": "de",
+      "source": "sheet3",
+      "is_primary": false
+    },
+    {
+      "series_id": "6e9d5b18-7016-5708-832d-cc559a1f989f",
+      "name": "Mamma, salvami! Papà mi ha lasciata a morire",
+      "lang": "it",
+      "source": "sheet3",
+      "is_primary": false
+    },
+    {
+      "series_id": "f1626786-e67d-59df-b5bb-3468ebfeab5b",
+      "name": "Un Heredero entre Nosotros",
+      "lang": "es",
+      "source": "sheet3",
+      "is_primary": false
+    },
+    {
+      "series_id": "f1626786-e67d-59df-b5bb-3468ebfeab5b",
+      "name": "Um Herdeiro Entre Nós",
+      "lang": "pt",
+      "source": "sheet3",
+      "is_primary": false
+    },
+    {
+      "series_id": "aa3ee2c8-8f69-5e94-98ba-47f67e1bceea",
+      "name": "Amor Proibido - Tornando Meu Irmão Meu em Segredo",
+      "lang": "pt",
+      "source": "sheet3",
+      "is_primary": false
     }
   ],
   "whitelist": [

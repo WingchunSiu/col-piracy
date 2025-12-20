@@ -1,13 +1,16 @@
 #!/usr/bin/env python3
+import argparse
 import json
 import os
 import sys
 import uuid
 import zipfile
 import xml.etree.ElementTree as ET
-from typing import Dict, List, Tuple
+from typing import Dict, List, Set, Tuple
 
-from src.utils.normalize import normalize_text, normalize_for_match, split_aliases
+from openpyxl import load_workbook
+
+from src.utils.normalize import normalize_text, normalize_for_match
 
 
 def read_xlsx_sheets(path: str) -> Tuple[List[Tuple[str, str]], Dict[str, List[List[str]]]]:
@@ -91,8 +94,38 @@ def ns_uuid(name: str) -> str:
     return str(uuid.uuid5(uuid.NAMESPACE_URL, key))
 
 
-def import_xlsx(xlsx_path: str, out_path: str) -> None:
+def cell_is_highlighted(cell, highlight_color: str) -> bool:
+    fg = cell.fill.fgColor if cell.fill is not None else None
+    return fg is not None and fg.value == highlight_color
+
+
+def load_highlight_index(xlsx_path: str, sheet_names: List[str], highlight_color: str) -> Dict[str, Dict[str, Set[int] | Set[Tuple[int, int]]]]:
+    wb = load_workbook(xlsx_path)
+    info: Dict[str, Dict[str, Set[int] | Set[Tuple[int, int]]]] = {}
+    for name in sheet_names:
+        if name not in wb.sheetnames:
+            continue
+        ws = wb[name]
+        rows: Set[int] = set()
+        cells: Set[Tuple[int, int]] = set()
+        for row in ws.iter_rows():
+            for cell in row:
+                if cell_is_highlighted(cell, highlight_color):
+                    rows.add(cell.row)
+                    cells.add((cell.row, cell.column))
+        info[name] = {'rows': rows, 'cells': cells}
+    return info
+
+
+def import_xlsx(xlsx_path: str, out_path: str, highlight_only: bool = False, highlight_color: str = "FFFFF258") -> None:
     sheets, data = read_xlsx_sheets(xlsx_path)
+    highlight_index: Dict[str, Dict[str, Set[int] | Set[Tuple[int, int]]]] = {}
+    if highlight_only:
+        highlight_index = load_highlight_index(
+            xlsx_path,
+            ['自制版权文件', '自制剧多语言剧名'],
+            highlight_color,
+        )
 
     # Identify sheet paths by known names
     path_by_name = {name: path for name, path in sheets}
@@ -111,7 +144,11 @@ def import_xlsx(xlsx_path: str, out_path: str) -> None:
             print('自制版权文件 sheet is empty')
         else:
             h = header_map(rows[0])
-            for r in rows[1:]:
+            for row_idx, r in enumerate(rows[1:], start=2):
+                if highlight_only:
+                    sheet_marks = highlight_index.get('自制版权文件', {})
+                    if row_idx not in sheet_marks.get('rows', set()):
+                        continue
                 def get(col):
                     idx = h.get(col)
                     return normalize_text(r[idx]) if idx is not None and idx < len(r) else ''
@@ -129,13 +166,11 @@ def import_xlsx(xlsx_path: str, out_path: str) -> None:
                         'doc_reference': get('版本证明文件（脱敏版）') or None,
                         'cover': get('封面') or None,
                     }
-                # Aliases: 剧名, 上线剧名, 别名 (split)
-                alias_sources = [
-                    ('sheet2', get('剧名')),
-                    ('sheet2', get('上线剧名')),
-                ]
-                for a in split_aliases(get('别名')):
-                    alias_sources.append(('sheet2', a))
+                # Aliases: keep minimal to avoid over-expansion; prefer canonical + raw title if different
+                alias_sources = [('sheet2', series[sid]['canonical_title'])]
+                raw_title = get('剧名')
+                if raw_title and normalize_for_match(raw_title) != normalize_for_match(series[sid]['canonical_title']):
+                    alias_sources.append(('sheet2', raw_title))
 
                 for src, a in alias_sources:
                     a = normalize_text(a)
@@ -171,7 +206,17 @@ def import_xlsx(xlsx_path: str, out_path: str) -> None:
                 'Japanese (日语)': 'ja',
                 'Thai (泰语)': 'th',
             }
-            for r in rows[1:]:
+            for row_idx, r in enumerate(rows[1:], start=2):
+                if highlight_only:
+                    sheet_marks = highlight_index.get('自制剧多语言剧名', {})
+                    cols_to_check = []
+                    if h.get('English (英语)') is not None:
+                        cols_to_check.append(h.get('English (英语)') + 1)
+                    for col in lang_map:
+                        if h.get(col) is not None:
+                            cols_to_check.append(h.get(col) + 1)
+                    if not any((row_idx, col) in sheet_marks.get('cells', set()) for col in cols_to_check):
+                        continue
                 # Use English as join key when present
                 eng_idx = h.get('English (英语)')
                 eng = normalize_text(r[eng_idx]) if eng_idx is not None and eng_idx < len(r) else ''
@@ -187,6 +232,19 @@ def import_xlsx(xlsx_path: str, out_path: str) -> None:
                         'doc_reference': None,
                         'cover': None,
                     }
+                if highlight_only and eng_idx is not None:
+                    sheet_marks = highlight_index.get('自制剧多语言剧名', {})
+                    if (row_idx, eng_idx + 1) in sheet_marks.get('cells', set()):
+                        norm = normalize_for_match(eng)
+                        if norm not in alias_index:
+                            alias_index[norm] = sid
+                            aliases.append({
+                                'series_id': sid,
+                                'name': eng,
+                                'lang': 'en',
+                                'source': 'sheet3',
+                                'is_primary': False,
+                            })
                 # Add language-specific names
                 for col, lang in lang_map.items():
                     idx = h.get(col)
@@ -195,6 +253,10 @@ def import_xlsx(xlsx_path: str, out_path: str) -> None:
                     val = normalize_text(r[idx])
                     if not val:
                         continue
+                    if highlight_only:
+                        sheet_marks = highlight_index.get('自制剧多语言剧名', {})
+                        if (row_idx, idx + 1) not in sheet_marks.get('cells', set()):
+                            continue
                     norm = normalize_for_match(val)
                     if norm in alias_index:
                         continue
@@ -213,14 +275,17 @@ def import_xlsx(xlsx_path: str, out_path: str) -> None:
         rows = data[s5_path]
         if rows:
             h = header_map(rows[0])
-            base_col = '原剧名（英语或日语）'
+            base_col = next((c for c in ['原剧名（英语或日语）', '原剧名(英语或日语)'] if h.get(c) is not None), None)
+            if base_col is None:
+                print('sereal自制剧单-多语言 missing base column 原剧名')
             # Map headers to ISO lang codes where reasonable
             col_lang = {
                 '西语': 'es', '葡语': 'pt', '意语': 'it', '德语': 'de', '法语': 'fr',
                 '日语': 'ja', '韩语': 'ko', '印尼语': 'id', '泰语': 'th', '繁中': 'zh-Hant'
             }
             for r in rows[1:]:
-                base = normalize_text(r[h.get(base_col, -1)]) if h.get(base_col) is not None and h.get(base_col) < len(r) else ''
+                base_idx = h.get(base_col, -1) if base_col is not None else -1
+                base = normalize_text(r[base_idx]) if base_idx is not None and base_idx >= 0 and base_idx < len(r) else ''
                 if not base:
                     continue
                 # Try match against any existing alias
@@ -301,7 +366,10 @@ def import_xlsx(xlsx_path: str, out_path: str) -> None:
 
 
 if __name__ == '__main__':
-    xlsx = sys.argv[1] if len(sys.argv) > 1 else '打击盗版相关剧.xlsx'
-    out = sys.argv[2] if len(sys.argv) > 2 else 'data/data.json'
-    import_xlsx(xlsx, out)
-
+    parser = argparse.ArgumentParser()
+    parser.add_argument('xlsx', nargs='?', default='打击盗版相关剧.xlsx')
+    parser.add_argument('out', nargs='?', default='data/data.json')
+    parser.add_argument('--highlight-only', action='store_true', help='Only import rows/cells with highlight fill')
+    parser.add_argument('--highlight-color', default='FFFFF258', help='ARGB fill color used for highlighting')
+    args = parser.parse_args()
+    import_xlsx(args.xlsx, args.out, highlight_only=args.highlight_only, highlight_color=args.highlight_color)
