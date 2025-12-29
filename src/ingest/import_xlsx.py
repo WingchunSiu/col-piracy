@@ -117,7 +117,62 @@ def load_highlight_index(xlsx_path: str, sheet_names: List[str], highlight_color
     return info
 
 
-def import_xlsx(xlsx_path: str, out_path: str, highlight_only: bool = False, highlight_color: str = "FFFFF258") -> None:
+def merge_existing_data(existing: Dict, incoming: Dict, source_file: str) -> Dict:
+    series_by_id = {s['series_id']: s for s in existing.get('series', [])}
+    for s in incoming.get('series', []):
+        if s['series_id'] not in series_by_id:
+            series_by_id[s['series_id']] = s
+
+    alias_index: Dict[str, str] = {}
+    merged_aliases = []
+    for a in existing.get('aliases', []):
+        name = a.get('name')
+        if not name:
+            continue
+        norm = normalize_for_match(name)
+        if norm in alias_index:
+            continue
+        alias_index[norm] = a['series_id']
+        merged_aliases.append(a)
+
+    for a in incoming.get('aliases', []):
+        name = a.get('name')
+        if not name:
+            continue
+        norm = normalize_for_match(name)
+        if norm in alias_index:
+            continue
+        alias_index[norm] = a['series_id']
+        merged_aliases.append(a)
+
+    existing_whitelist = existing.get('whitelist', [])
+    whitelist_index = {(w.get('platform'), w.get('channel_url')) for w in existing_whitelist}
+    merged_whitelist = list(existing_whitelist)
+    for w in incoming.get('whitelist', []):
+        key = (w.get('platform'), w.get('channel_url'))
+        if key in whitelist_index:
+            continue
+        whitelist_index.add(key)
+        merged_whitelist.append(w)
+
+    meta = dict(existing.get('meta', {}))
+    meta['source_file'] = os.path.basename(source_file)
+
+    return {
+        'series': list(series_by_id.values()),
+        'aliases': merged_aliases,
+        'whitelist': merged_whitelist,
+        'meta': meta,
+    }
+
+
+def import_xlsx(
+    xlsx_path: str,
+    out_path: str,
+    highlight_only: bool = False,
+    highlight_color: str = "FFFFF258",
+    merge_existing: str | None = None,
+) -> None:
     sheets, data = read_xlsx_sheets(xlsx_path)
     highlight_index: Dict[str, Dict[str, Set[int] | Set[Tuple[int, int]]]] = {}
     if highlight_only:
@@ -358,6 +413,11 @@ def import_xlsx(xlsx_path: str, out_path: str, highlight_only: bool = False, hig
         },
     }
 
+    if merge_existing:
+        with open(merge_existing, 'r', encoding='utf-8') as f:
+            existing = json.load(f)
+        out = merge_existing_data(existing, out, xlsx_path)
+
     os.makedirs(os.path.dirname(out_path), exist_ok=True)
     with open(out_path, 'w', encoding='utf-8') as f:
         json.dump(out, f, ensure_ascii=False, indent=2)
@@ -371,5 +431,12 @@ if __name__ == '__main__':
     parser.add_argument('out', nargs='?', default='data/data.json')
     parser.add_argument('--highlight-only', action='store_true', help='Only import rows/cells with highlight fill')
     parser.add_argument('--highlight-color', default='FFFFF258', help='ARGB fill color used for highlighting')
+    parser.add_argument('--merge-existing', default=None, help='Merge into an existing data.json instead of rebuilding')
     args = parser.parse_args()
-    import_xlsx(args.xlsx, args.out, highlight_only=args.highlight_only, highlight_color=args.highlight_color)
+    import_xlsx(
+        args.xlsx,
+        args.out,
+        highlight_only=args.highlight_only,
+        highlight_color=args.highlight_color,
+        merge_existing=args.merge_existing,
+    )

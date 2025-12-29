@@ -11,6 +11,7 @@ Place the spreadsheet `打击盗版相关剧.xlsx` at repo root and import to JS
 ```bash
 python3 src/ingest/import_xlsx.py 打击盗版相关剧.xlsx data/data.json
 python3 src/ingest/import_xlsx.py 打击盗版相关剧.xlsx data/data.json --highlight-only
+python3 src/ingest/import_xlsx.py 打击盗版相关剧.xlsx data/data.json --highlight-only --merge-existing data/data.json
 ```
 
 ### Daily Workflow

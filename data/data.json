@@ -1263,6 +1263,46 @@
       "exclusive": null,
       "doc_reference": null,
       "cover": null
+    },
+    {
+      "series_id": "8f6c1207-8d46-5352-8a33-064617f70662",
+      "canonical_title": "I Found Another Him, After He Died",
+      "content_type": "自制剧",
+      "exclusive": false,
+      "doc_reference": null,
+      "cover": null
+    },
+    {
+      "series_id": "06d25e90-ee65-56a7-8009-9580db81466b",
+      "canonical_title": "Merry Prince-Mas!",
+      "content_type": "自制剧",
+      "exclusive": false,
+      "doc_reference": null,
+      "cover": null
+    },
+    {
+      "series_id": "47a96a66-7fd0-55a8-8196-32689129b81b",
+      "canonical_title": "The Last Christmas For Daddy To Love Me",
+      "content_type": "自制剧",
+      "exclusive": false,
+      "doc_reference": null,
+      "cover": null
+    },
+    {
+      "series_id": "f16b6821-8a67-502f-b38a-87655e6db567",
+      "canonical_title": "The Christmas Baby that Brought Us Home",
+      "content_type": "自制剧",
+      "exclusive": false,
+      "doc_reference": null,
+      "cover": null
+    },
+    {
+      "series_id": "dcdc70db-eb8c-51e2-8107-e28cecce53db",
+      "canonical_title": "Sorority Heiress Takes Her Throne",
+      "content_type": "自制剧",
+      "exclusive": false,
+      "doc_reference": null,
+      "cover": null
     }
   ],
   "aliases": [
@@ -4802,13 +4842,6 @@
       "is_primary": true
     },
     {
-      "series_id": "57ad1f13-74d5-5755-a1e8-ac4e777f8064",
-      "name": "子の命途絶えて、夫婦の幕は下りる",
-      "lang": null,
-      "source": "canonical",
-      "is_primary": true
-    },
-    {
       "series_id": "a79f9d62-dcfa-5922-b875-74d98531cd45",
       "name": "Two-Faced Mistress Seduction & Schemes",
       "lang": null,
@@ -4923,13 +4956,6 @@
     {
       "series_id": "e3c15fb9-9021-581d-b06e-024b1b3ce905",
       "name": "Hollywood Staged Romance Live 24",
-      "lang": null,
-      "source": "canonical",
-      "is_primary": true
-    },
-    {
-      "series_id": "606c3086-664e-5868-8491-69ded5b1b76f",
-      "name": "Slay Queen's Second Life",
       "lang": null,
       "source": "canonical",
       "is_primary": true
@@ -5145,27 +5171,6 @@
       "is_primary": true
     },
     {
-      "series_id": "7fe87da0-1a29-5e25-b36e-c3a76f43441b",
-      "name": "他人未満 -親愛なる疎ましい貴方-",
-      "lang": null,
-      "source": "canonical",
-      "is_primary": true
-    },
-    {
-      "series_id": "6ee6be6c-df58-5087-80b6-792bc4c77491",
-      "name": "君を駆ける",
-      "lang": null,
-      "source": "canonical",
-      "is_primary": true
-    },
-    {
-      "series_id": "df05bae1-4e42-594c-ab89-8856606ec63e",
-      "name": "職場ギャンブラー",
-      "lang": null,
-      "source": "canonical",
-      "is_primary": true
-    },
-    {
       "series_id": "7289fe33-5097-52a3-a861-f9d7d0635d15",
       "name": "My L.A. Fireman",
       "lang": null,
@@ -5287,20 +5292,6 @@
     {
       "series_id": "46927cc5-3bdb-55bd-83f0-b0e175aba2f0",
       "name": "Hold Me Tight, Mr. Firefighter",
-      "lang": null,
-      "source": "canonical",
-      "is_primary": true
-    },
-    {
-      "series_id": "f9157e8b-bc65-5625-a412-e371606908d7",
-      "name": "Fated to My Forbidden Guardian",
-      "lang": null,
-      "source": "canonical",
-      "is_primary": true
-    },
-    {
-      "series_id": "09b8a0f4-d5f1-5bdb-8aac-facb85279bba",
-      "name": "I Can’t Breathe, Mom...Daddy’s Killing Me",
       "lang": null,
       "source": "canonical",
       "is_primary": true
@@ -5745,6 +5736,69 @@
       "lang": "pt",
       "source": "sheet3",
       "is_primary": false
+    },
+    {
+      "series_id": "8f6c1207-8d46-5352-8a33-064617f70662",
+      "name": "I Found Another Him, After He Died",
+      "lang": null,
+      "source": "sheet2",
+      "is_primary": true
+    },
+    {
+      "series_id": "06d25e90-ee65-56a7-8009-9580db81466b",
+      "name": "Merry Prince-Mas!",
+      "lang": null,
+      "source": "sheet2",
+      "is_primary": true
+    },
+    {
+      "series_id": "47a96a66-7fd0-55a8-8196-32689129b81b",
+      "name": "The Last Christmas For Daddy To Love Me",
+      "lang": null,
+      "source": "sheet2",
+      "is_primary": true
+    },
+    {
+      "series_id": "f16b6821-8a67-502f-b38a-87655e6db567",
+      "name": "The Christmas Baby that Brought Us Home",
+      "lang": null,
+      "source": "sheet2",
+      "is_primary": true
+    },
+    {
+      "series_id": "dcdc70db-eb8c-51e2-8107-e28cecce53db",
+      "name": "Sorority Heiress Takes Her Throne",
+      "lang": null,
+      "source": "sheet2",
+      "is_primary": true
+    },
+    {
+      "series_id": "d2252afa-6203-5b2e-b6f9-67f13a02be85",
+      "name": "Tidak Akan Lagi",
+      "lang": "id",
+      "source": "sheet3",
+      "is_primary": false
+    },
+    {
+      "series_id": "aa3ee2c8-8f69-5e94-98ba-47f67e1bceea",
+      "name": "Amor Prohibido - Haciendo Mío a mi Hermano en Secreto",
+      "lang": "es",
+      "source": "sheet3",
+      "is_primary": false
+    },
+    {
+      "series_id": "aa3ee2c8-8f69-5e94-98ba-47f67e1bceea",
+      "name": "Verbotene Liebe",
+      "lang": "fr",
+      "source": "sheet3",
+      "is_primary": false
+    },
+    {
+      "series_id": "aa3ee2c8-8f69-5e94-98ba-47f67e1bceea",
+      "name": "Amore Proibito – Mio Fratello, mio in segreto",
+      "lang": "de",
+      "source": "sheet3",
+      "is_primary": false
     }
   ],
   "whitelist": [
@@ -5852,6 +5906,6 @@
     }
   ],
   "meta": {
-    "source_file": "打击盗版相关剧.xlsx"
+    "source_file": "打击盗版相关剧 (3).xlsx"
   }
 }
