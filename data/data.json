@@ -1303,6 +1303,30 @@
       "exclusive": false,
       "doc_reference": null,
       "cover": null
+    },
+    {
+      "series_id": "b49976d3-5e72-52e9-9b59-0818732d6794",
+      "canonical_title": "元カレの叔父に四つ子を授かりました",
+      "content_type": null,
+      "exclusive": null,
+      "doc_reference": null,
+      "cover": null
+    },
+    {
+      "series_id": "611b3ead-873a-5ecd-968c-4c2b3ed54478",
+      "canonical_title": "The Christmas Contract: Mafia's Stand-In Bride",
+      "content_type": null,
+      "exclusive": null,
+      "doc_reference": null,
+      "cover": null
+    },
+    {
+      "series_id": "b5aea195-31e6-5c79-a206-26cb42690dd5",
+      "canonical_title": "Love Through All Seasons",
+      "content_type": null,
+      "exclusive": null,
+      "doc_reference": null,
+      "cover": null
     }
   ],
   "aliases": [
@@ -5799,6 +5823,20 @@
       "lang": "de",
       "source": "sheet3",
       "is_primary": false
+    },
+    {
+      "series_id": "611b3ead-873a-5ecd-968c-4c2b3ed54478",
+      "name": "The Christmas Contract: Mafia's Stand-In Bride",
+      "lang": null,
+      "source": "manual",
+      "is_primary": true
+    },
+    {
+      "series_id": "b5aea195-31e6-5c79-a206-26cb42690dd5",
+      "name": "Love Through All Seasons",
+      "lang": null,
+      "source": "manual",
+      "is_primary": true
     }
   ],
   "whitelist": [
